@@ -1,5 +1,5 @@
 import XCTest
-@testable import PolyNativeSwift
+@testable import PolyNative
 
 final class PolyNativeSwiftTests: XCTestCase {
     func testExample() throws {

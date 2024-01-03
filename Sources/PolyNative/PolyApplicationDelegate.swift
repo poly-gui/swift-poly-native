@@ -18,7 +18,11 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         let stdout = Pipe()
         let stdin = Pipe()
         
-        portableLayerProcess.executableURL = URL(filePath: portableBinaryPath)
+        if #available(macOS 13.0, *) {
+            portableLayerProcess.executableURL = URL(filePath: portableBinaryPath)
+        } else {
+            portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
+        }
         portableLayerProcess.standardOutput = stdout
         portableLayerProcess.standardInput = stdin
         
