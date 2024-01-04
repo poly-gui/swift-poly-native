@@ -36,7 +36,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                 $0.load(as: Int32.self).littleEndian
             }
             
-            guard let message = makeNanoPackMessage(from: data[5...], typeID: Int(typeID)) else {
+            guard let message = makeNanoPackMessage(from: data, typeID: Int(typeID)) else {
                 return
             }
             
