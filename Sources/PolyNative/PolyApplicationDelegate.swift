@@ -47,6 +47,12 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                 break
             }
         }
+        
+        do {
+            try portableLayerProcess.run()
+        } catch let err {
+            print("Unable to start portable layer process: \(String(describing: err))")
+        }
     }
     
     private func createWindow(message: CreateWindow) {
