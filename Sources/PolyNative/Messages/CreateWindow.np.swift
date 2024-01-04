@@ -23,7 +23,7 @@ class CreateWindow: NanoPackMessage {
   }
 
   required init?(data: Data) {
-    var ptr = data.startIndex + 24
+    var ptr = 24
 
     let titleSize = data.readSize(ofField: 0)
     guard let title = data.read(at: ptr, withLength: titleSize) else {
