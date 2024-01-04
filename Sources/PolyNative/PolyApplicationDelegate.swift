@@ -32,7 +32,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             
-            let typeID = data[4 ..< 7].withUnsafeBytes {
+            let typeID = data[0 ..< 4].withUnsafeBytes {
                 $0.load(as: Int32.self).littleEndian
             }
             
