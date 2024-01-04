@@ -68,6 +68,6 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         )
         window.title = message.title
         window.center()
-        window.makeKeyAndOrderFront(window)
+        window.makeKeyAndOrderFront(nil)
     }
 }
