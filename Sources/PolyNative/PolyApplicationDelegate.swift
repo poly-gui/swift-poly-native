@@ -42,7 +42,10 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
             
             switch message.typeID {
             case CreateWindow_typeID:
-                self.createWindow(message: message as! CreateWindow)
+                DispatchQueue.main.sync {
+                    self.createWindow(message: message as! CreateWindow)
+                }
+                
             default:
                 break
             }
@@ -55,6 +58,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    @MainActor
     private func createWindow(message: CreateWindow) {
         let window = NSWindow(
             contentRect: NSMakeRect(0, 0, CGFloat(integerLiteral: Int(message.width)), CGFloat(integerLiteral: Int(message.height))),
