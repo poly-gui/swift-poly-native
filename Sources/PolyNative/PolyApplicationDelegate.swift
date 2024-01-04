@@ -9,6 +9,8 @@ import Cocoa
 import Foundation
 
 open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
+    private var windowManager = WindowManager()
+    
     open func applicationDidFinishLaunching(_ notification: Notification) {
         guard let portableBinaryPath = Bundle.main.path(forResource: "bundle", ofType: nil) else {
             return
@@ -69,5 +71,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         window.title = message.title
         window.center()
         window.makeKeyAndOrderFront(nil)
+        
+        windowManager.add(window: window, withTag: message.tag)
     }
 }
