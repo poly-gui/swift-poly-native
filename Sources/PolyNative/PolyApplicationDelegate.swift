@@ -34,11 +34,11 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             
-            let typeID = data[0 ..< 4].withUnsafeBytes {
+            let typeID = data[4 ..< 8].withUnsafeBytes {
                 $0.load(as: Int32.self).littleEndian
             }
             
-            guard let message = makeNanoPackMessage(from: data, typeID: Int(typeID)) else {
+            guard let message = makeNanoPackMessage(from: data[4...], typeID: Int(typeID)) else {
                 return
             }
             
