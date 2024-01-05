@@ -7,6 +7,7 @@
 
 import Cocoa
 import Foundation
+import NanoPack
 
 open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private var windowManager = WindowManager()
@@ -42,21 +43,30 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             
-            switch message.typeID {
-            case CreateWindow_typeID:
-                DispatchQueue.main.sync {
-                    self.createWindow(message: message as! CreateWindow)
-                }
-                
-            default:
-                break
-            }
+            self.handleMessage(message)
         }
         
         do {
             try portableLayerProcess.run()
         } catch let err {
             print("Unable to start portable layer process: \(String(describing: err))")
+        }
+    }
+    
+    private func handleMessage(_ message: NanoPackMessage) {
+        switch message.typeID {
+        case CreateWindow_typeID:
+            Task {
+                await MainActor.run { self.createWindow(message: message as! CreateWindow) }
+            }
+            
+        case CreateWidget_typeID:
+            Task {
+                await MainActor.run { self.createView(message: message as! CreateWidget) }
+            }
+            
+        default:
+            break
         }
     }
     
@@ -73,5 +83,14 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
         
         windowManager.add(window: window, withTag: message.tag)
+    }
+    
+    @MainActor
+    private func createView(message: CreateWidget) {
+        guard let view = makeWidget(with: message),
+              let window = windowManager.findWindow(withTag: message.windowTag) else {
+            return
+        }
+        window.contentView?.addSubview(view)
     }
 }
