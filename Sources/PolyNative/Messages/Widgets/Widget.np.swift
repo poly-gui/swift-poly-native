@@ -17,6 +17,7 @@ class Widget: NanoPackMessage {
   static func from(data: Data) -> Widget? {
     switch data.readTypeID() {
     case Widget_typeID: return Widget(data: data)
+    case Center_typeID: return Center(data: data)
     case Text_typeID: return Text(data: data)
     default: return nil
     }
