@@ -23,7 +23,7 @@ class Widget: NanoPackMessage {
   }
 
   required init?(data: Data) {
-    var ptr = 8
+    var ptr = data.startIndex + 8
 
     let tag: Int32?
     if data.readSize(ofField: 0) < 0 {

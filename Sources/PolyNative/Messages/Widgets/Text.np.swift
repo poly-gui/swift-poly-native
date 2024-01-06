@@ -16,7 +16,7 @@ class Text: Widget {
   }
 
   required init?(data: Data) {
-    var ptr = 12
+    var ptr = data.startIndex + 12
 
     let tag: Int32?
     if data.readSize(ofField: 0) < 0 {

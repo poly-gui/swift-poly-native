@@ -15,7 +15,7 @@ class InvokeCallback: NanoPackMessage {
   }
 
   required init?(data: Data) {
-    var ptr = 8
+    var ptr = data.startIndex + 8
 
     let handle: Int32 = data.read(at: ptr)
     ptr += 4

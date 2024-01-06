@@ -17,7 +17,7 @@ class CreateWidget: NanoPackMessage {
   }
 
   required init?(data: Data) {
-    var ptr = 12
+    var ptr = data.startIndex + 12
 
     let widgetSize = data.readSize(ofField: 0)
     guard let widget = Widget.from(data: data[ptr..<ptr + widgetSize]) else {
