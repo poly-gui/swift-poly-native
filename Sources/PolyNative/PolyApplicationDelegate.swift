@@ -87,11 +87,9 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     
     @MainActor
     private func createView(message: CreateWidget) {
-        guard let window = windowManager.findWindow(withTag: message.windowTag),
-              let view = makeWidget(with: message.widget, parent: window.contentView)
-        else {
+        guard let rootView = windowManager.findWindow(withTag: message.windowTag)?.contentView else {
             return
         }
-        window.contentView?.addSubview(view)
+        _ = makeWidget(with: message.widget, parent: rootView)
     }
 }

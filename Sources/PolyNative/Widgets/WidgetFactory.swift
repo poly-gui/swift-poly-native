@@ -10,10 +10,10 @@ import Foundation
 import NanoPack
 
 @MainActor
-func makeWidget(with message: Widget, parent: NSView? = nil) -> NSView? {
+func makeWidget(with message: Widget, parent: NSView) -> NSView? {
     switch message.typeID {
     case Text_typeID:
-        return makeText(with: message as! Text)
+        return makeText(with: message as! Text, parent: parent)
 
     case Center_typeID:
         return makeCenter(with: message as! Center, parent: parent)

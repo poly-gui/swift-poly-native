@@ -9,10 +9,8 @@ import AppKit
 import Foundation
 
 @MainActor
-func makeCenter(with message: Center, parent: NSView?) -> NSView? {
-    guard let parent = parent,
-          let child = makeWidget(with: message.child, parent: parent)
-    else {
+func makeCenter(with message: Center, parent: NSView) -> NSView? {
+    guard let child = makeWidget(with: message.child, parent: parent) else {
         return nil
     }
 

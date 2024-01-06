@@ -9,10 +9,13 @@ import AppKit
 import Foundation
 
 @MainActor
-func makeText(with message: Text) -> NSTextField {
+func makeText(with message: Text, parent: NSView) -> NSTextField {
     let text = NSTextField(labelWithString: message.content)
     if let tag = message.tag {
         text.tag = Int(tag)
     }
+
+    parent.addSubview(text)
+
     return text
 }
