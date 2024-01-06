@@ -10,20 +10,13 @@ import Foundation
 
 @MainActor
 func makeCenter(with message: Center, parent: NSView) -> NSView? {
-    let containerView = NSView()
-    parent.addSubview(containerView)
-
-    containerView.topAnchor.constraint(equalTo: parent.topAnchor).isActive = true
-    containerView.bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
-    containerView.leftAnchor.constraint(equalTo: parent.leftAnchor).isActive = true
-    containerView.rightAnchor.constraint(equalTo: parent.rightAnchor).isActive = true
-
-    guard let child = makeWidget(with: message.child, parent: containerView) else {
+    guard let child = makeWidget(with: message.child, parent: parent) else {
         return nil
     }
+    
+    child.translatesAutoresizingMaskIntoConstraints = false
+    child.centerXAnchor.constraint(equalTo: parent.centerXAnchor).isActive = true
+    child.centerYAnchor.constraint(equalTo: parent.centerYAnchor).isActive = true
 
-    child.centerXAnchor.constraint(equalTo: containerView.centerXAnchor).isActive = true
-    child.centerYAnchor.constraint(equalTo: containerView.centerYAnchor).isActive = true
-
-    return containerView
+    return child
 }

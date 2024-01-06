@@ -74,7 +74,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private func createWindow(message: CreateWindow) {
         let window = NSWindow(
             contentRect: NSMakeRect(0, 0, CGFloat(integerLiteral: Int(message.width)), CGFloat(integerLiteral: Int(message.height))),
-            styleMask: [.titled, .resizable, .miniaturizable, .closable, .fullSizeContentView],
+            styleMask: [.titled, .resizable, .miniaturizable, .closable],
             backing: .buffered,
             defer: false
         )
