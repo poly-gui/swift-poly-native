@@ -56,6 +56,42 @@ class CreateWindow: NanoPackMessage {
     self.tag = tag
   }
 
+  required init?(data: Data, bytesRead: inout Int) {
+    var ptr = data.startIndex + 24
+
+    let titleSize = data.readSize(ofField: 0)
+    guard let title = data.read(at: ptr, withLength: titleSize) else {
+      return nil
+    }
+    ptr += titleSize
+
+    let descriptionSize = data.readSize(ofField: 1)
+    guard let description = data.read(at: ptr, withLength: descriptionSize) else {
+      return nil
+    }
+    ptr += descriptionSize
+
+    let width: Int32 = data.read(at: ptr)
+    ptr += 4
+
+    let height: Int32 = data.read(at: ptr)
+    ptr += 4
+
+    let tagSize = data.readSize(ofField: 4)
+    guard let tag = data.read(at: ptr, withLength: tagSize) else {
+      return nil
+    }
+    ptr += tagSize
+
+    self.title = title
+    self.description = description
+    self.width = width
+    self.height = height
+    self.tag = tag
+
+    bytesRead = ptr - data.startIndex
+  }
+
   func data() -> Data? {
     var data = Data()
     data.reserveCapacity(24)

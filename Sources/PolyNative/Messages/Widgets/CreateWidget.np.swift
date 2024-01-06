@@ -35,6 +35,27 @@ class CreateWidget: NanoPackMessage {
     self.windowTag = windowTag
   }
 
+  required init?(data: Data, bytesRead: inout Int) {
+    var ptr = data.startIndex + 12
+
+    let widgetSize = data.readSize(ofField: 0)
+    guard let widget = Widget.from(data: data[ptr..<ptr + widgetSize]) else {
+      return nil
+    }
+    ptr += widgetSize
+
+    let windowTagSize = data.readSize(ofField: 1)
+    guard let windowTag = data.read(at: ptr, withLength: windowTagSize) else {
+      return nil
+    }
+    ptr += windowTagSize
+
+    self.widget = widget
+    self.windowTag = windowTag
+
+    bytesRead = ptr - data.startIndex
+  }
+
   func data() -> Data? {
     var data = Data()
     data.reserveCapacity(12)

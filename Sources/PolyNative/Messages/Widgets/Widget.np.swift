@@ -36,6 +36,22 @@ class Widget: NanoPackMessage {
     self.tag = tag
   }
 
+  required init?(data: Data, bytesRead: inout Int) {
+    var ptr = data.startIndex + 8
+
+    let tag: Int32?
+    if data.readSize(ofField: 0) < 0 {
+      tag = nil
+    } else {
+      tag = data.read(at: ptr)
+      ptr += 4
+    }
+
+    self.tag = tag
+
+    bytesRead = ptr - data.startIndex
+  }
+
   func data() -> Data? {
     var data = Data()
     data.reserveCapacity(8)

@@ -23,6 +23,17 @@ class InvokeCallback: NanoPackMessage {
     self.handle = handle
   }
 
+  required init?(data: Data, bytesRead: inout Int) {
+    var ptr = data.startIndex + 8
+
+    let handle: Int32 = data.read(at: ptr)
+    ptr += 4
+
+    self.handle = handle
+
+    bytesRead = ptr - data.startIndex
+  }
+
   func data() -> Data? {
     var data = Data()
     data.reserveCapacity(8)

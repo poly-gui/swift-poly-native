@@ -36,6 +36,29 @@ class Text: Widget {
     super.init(tag: tag)
   }
 
+  required init?(data: Data, bytesRead: inout Int) {
+    var ptr = data.startIndex + 12
+
+    let tag: Int32?
+    if data.readSize(ofField: 0) < 0 {
+      tag = nil
+    } else {
+      tag = data.read(at: ptr)
+      ptr += 4
+    }
+
+    let contentSize = data.readSize(ofField: 1)
+    guard let content = data.read(at: ptr, withLength: contentSize) else {
+      return nil
+    }
+    ptr += contentSize
+
+    self.content = content
+    super.init(tag: tag)
+
+    bytesRead = ptr - data.startIndex
+  }
+
   override func data() -> Data? {
     var data = Data()
     data.reserveCapacity(12)
