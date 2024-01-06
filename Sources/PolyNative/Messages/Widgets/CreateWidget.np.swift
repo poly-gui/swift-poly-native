@@ -23,6 +23,7 @@ class CreateWidget: NanoPackMessage {
     guard let widget = Widget.from(data: data[ptr..<ptr + widgetSize]) else {
       return nil
     }
+    ptr += widgetSize
 
     let windowTagSize = data.readSize(ofField: 1)
     guard let windowTag = data.read(at: ptr, withLength: windowTagSize) else {
