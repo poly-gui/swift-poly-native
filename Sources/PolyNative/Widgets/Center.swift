@@ -11,7 +11,7 @@ import Foundation
 @MainActor
 func makeCenter(with message: Center, parent: NSView) -> NSView? {
     let containerView = NSView()
-    parent.addSubview(parent)
+    parent.addSubview(containerView)
 
     containerView.topAnchor.constraint(equalTo: parent.topAnchor).isActive = true
     containerView.bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
