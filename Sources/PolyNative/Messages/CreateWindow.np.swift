@@ -6,7 +6,7 @@ import NanoPack
 let CreateWindow_typeID: TypeID = 10
 
 class CreateWindow: NanoPackMessage {
-  let typeID: TypeID = 10
+  var typeID: TypeID { return 10 }
 
   let title: String
   let description: String

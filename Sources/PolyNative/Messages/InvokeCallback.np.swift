@@ -6,7 +6,7 @@ import NanoPack
 let InvokeCallback_typeID: TypeID = 2
 
 class InvokeCallback: NanoPackMessage {
-  let typeID: TypeID = 2
+  var typeID: TypeID { return 2 }
 
   let handle: Int32
 
