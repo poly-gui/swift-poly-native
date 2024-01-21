@@ -42,7 +42,7 @@ class InvokeCallback: NanoPackMessage {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 4)
+    data.append([0], count: 1 * 4)
 
     data.write(size: 4, ofField: 1)
     data.append(int: handle)

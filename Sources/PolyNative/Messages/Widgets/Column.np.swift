@@ -18,7 +18,7 @@ class Column: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 12
 
-    let tag: Int32?
+    var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -31,12 +31,12 @@ class Column: Widget {
     var children: [Widget] = []
     children.reserveCapacity(childrenItemCount)
     for _ in 0..<childrenItemCount {
-      var item0Size = 0
-      guard let item0 = Widget.from(data: data[ptr...], bytesRead: &item0Size) else {
+      var iItemByteSize = 0
+      guard let iItem = Widget(data: data[ptr...], bytesRead: &iItemByteSize) else {
         return nil
       }
-      ptr += item0Size
-      children.append(item0)
+      ptr += iItemByteSize
+      children.append(iItem)
     }
 
     self.children = children
@@ -46,7 +46,7 @@ class Column: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 12
 
-    let tag: Int32?
+    var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -59,12 +59,12 @@ class Column: Widget {
     var children: [Widget] = []
     children.reserveCapacity(childrenItemCount)
     for _ in 0..<childrenItemCount {
-      var item0Size = 0
-      guard let item0 = Widget.from(data: data[ptr...], bytesRead: &item0Size) else {
+      var iItemByteSize = 0
+      guard let iItem = Widget(data: data[ptr...], bytesRead: &iItemByteSize) else {
         return nil
       }
-      ptr += item0Size
-      children.append(item0)
+      ptr += iItemByteSize
+      children.append(iItem)
     }
 
     self.children = children
@@ -81,7 +81,7 @@ class Column: Widget {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 8)
+    data.append([0], count: 2 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0)
@@ -90,17 +90,16 @@ class Column: Widget {
       data.write(size: -1, ofField: 0)
     }
 
-    var childrenTotalByteSize = 4
     data.append(size: children.count)
-    for item0 in children {
-      guard let item0Data = item0.data() else {
+    var childrenByteSize: Size = 4
+    for i in children {
+      guard let iData = i.data() else {
         return nil
       }
-      data.append(item0Data)
-      childrenTotalByteSize += item0Data.count
+      data.append(iData)
+      childrenByteSize += iData.count
     }
-
-    data.write(size: childrenTotalByteSize, ofField: 1)
+    data.write(size: childrenByteSize, ofField: 1)
 
     return data
   }

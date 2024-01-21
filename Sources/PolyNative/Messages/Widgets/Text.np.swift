@@ -18,7 +18,7 @@ class Text: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 12
 
-    let tag: Int32?
+    var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -39,7 +39,7 @@ class Text: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 12
 
-    let tag: Int32?
+    var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -67,7 +67,7 @@ class Text: Widget {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 8)
+    data.append([0], count: 2 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0)

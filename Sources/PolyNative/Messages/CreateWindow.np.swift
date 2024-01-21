@@ -100,7 +100,7 @@ class CreateWindow: NanoPackMessage {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 20)
+    data.append([0], count: 5 * 4)
 
     data.write(size: title.lengthOfBytes(using: .utf8), ofField: 0)
     data.append(string: title)

@@ -21,6 +21,7 @@ func makeColumn<Parent: NSView>(with message: Column, parent: Parent, commit: Vi
         }
     }
 
+
     commit(stackView, parent)
 
     return stackView

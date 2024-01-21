@@ -10,34 +10,34 @@ class Widget: NanoPackMessage {
 
   let tag: Int32?
 
-  init(tag: Int32?) {
-    self.tag = tag
-  }
-
   static func from(data: Data) -> Widget? {
     switch data.readTypeID() {
-    case Widget_typeID: return Widget(data: data)
-    case Column_typeID: return Column(data: data)
-    case Center_typeID: return Center(data: data)
-    case Text_typeID: return Text(data: data)
+    case 100: return Widget(data: data)
+    case 101: return Text(data: data)
+    case 102: return Center(data: data)
+    case 103: return Column(data: data)
     default: return nil
     }
   }
 
   static func from(data: Data, bytesRead: inout Int) -> Widget? {
     switch data.readTypeID() {
-    case Widget_typeID: return Widget(data: data, bytesRead: &bytesRead)
-    case Column_typeID: return Column(data: data, bytesRead: &bytesRead)
-    case Center_typeID: return Center(data: data, bytesRead: &bytesRead)
-    case Text_typeID: return Text(data: data, bytesRead: &bytesRead)
+    case 100: return Widget(data: data, bytesRead: &bytesRead)
+    case 101: return Text(data: data, bytesRead: &bytesRead)
+    case 102: return Center(data: data, bytesRead: &bytesRead)
+    case 103: return Column(data: data, bytesRead: &bytesRead)
     default: return nil
     }
+  }
+
+  init(tag: Int32?) {
+    self.tag = tag
   }
 
   required init?(data: Data) {
     var ptr = data.startIndex + 8
 
-    let tag: Int32?
+    var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -51,7 +51,7 @@ class Widget: NanoPackMessage {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 8
 
-    let tag: Int32?
+    var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -72,7 +72,7 @@ class Widget: NanoPackMessage {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 4)
+    data.append([0], count: 1 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0)

@@ -19,11 +19,11 @@ class CreateWidget: NanoPackMessage {
   required init?(data: Data) {
     var ptr = data.startIndex + 12
 
-    let widgetSize = data.readSize(ofField: 0)
-    guard let widget = Widget.from(data: data[ptr..<ptr + widgetSize]) else {
+    let widgetByteSize = data.readSize(ofField: 0)
+    guard let widget = Widget(data: data[ptr...]) else {
       return nil
     }
-    ptr += widgetSize
+    ptr += widgetByteSize
 
     let windowTagSize = data.readSize(ofField: 1)
     guard let windowTag = data.read(at: ptr, withLength: windowTagSize) else {
@@ -38,11 +38,11 @@ class CreateWidget: NanoPackMessage {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 12
 
-    let widgetSize = data.readSize(ofField: 0)
-    guard let widget = Widget.from(data: data[ptr..<ptr + widgetSize]) else {
+    let widgetByteSize = data.readSize(ofField: 0)
+    guard let widget = Widget(data: data[ptr...]) else {
       return nil
     }
-    ptr += widgetSize
+    ptr += widgetByteSize
 
     let windowTagSize = data.readSize(ofField: 1)
     guard let windowTag = data.read(at: ptr, withLength: windowTagSize) else {
@@ -64,13 +64,13 @@ class CreateWidget: NanoPackMessage {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 8)
+    data.append([0], count: 2 * 4)
 
     guard let widgetData = widget.data() else {
       return nil
     }
-    data.append(widgetData)
     data.write(size: widgetData.count, ofField: 0)
+    data.append(widgetData)
 
     data.write(size: windowTag.lengthOfBytes(using: .utf8), ofField: 1)
     data.append(string: windowTag)
