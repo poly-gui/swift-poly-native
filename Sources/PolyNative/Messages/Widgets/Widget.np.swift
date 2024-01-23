@@ -13,9 +13,9 @@ class Widget: NanoPackMessage {
   static func from(data: Data) -> Widget? {
     switch data.readTypeID() {
     case 100: return Widget(data: data)
+    case 103: return Column(data: data)
     case 101: return Text(data: data)
     case 102: return Center(data: data)
-    case 103: return Column(data: data)
     default: return nil
     }
   }
@@ -23,9 +23,9 @@ class Widget: NanoPackMessage {
   static func from(data: Data, bytesRead: inout Int) -> Widget? {
     switch data.readTypeID() {
     case 100: return Widget(data: data, bytesRead: &bytesRead)
+    case 103: return Column(data: data, bytesRead: &bytesRead)
     case 101: return Text(data: data, bytesRead: &bytesRead)
     case 102: return Center(data: data, bytesRead: &bytesRead)
-    case 103: return Column(data: data, bytesRead: &bytesRead)
     default: return nil
     }
   }

@@ -20,7 +20,7 @@ class CreateWidget: NanoPackMessage {
     var ptr = data.startIndex + 12
 
     let widgetByteSize = data.readSize(ofField: 0)
-    guard let widget = Widget(data: data[ptr...]) else {
+    guard let widget = Widget.from(data: data[ptr...]) else {
       return nil
     }
     ptr += widgetByteSize
@@ -39,7 +39,7 @@ class CreateWidget: NanoPackMessage {
     var ptr = data.startIndex + 12
 
     let widgetByteSize = data.readSize(ofField: 0)
-    guard let widget = Widget(data: data[ptr...]) else {
+    guard let widget = Widget.from(data: data[ptr...]) else {
       return nil
     }
     ptr += widgetByteSize

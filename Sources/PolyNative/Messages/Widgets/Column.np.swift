@@ -8,15 +8,26 @@ let Column_typeID: TypeID = 103
 class Column: Widget {
   override var typeID: TypeID { return 103 }
 
+  let width: Double
+  let height: Double
+  let horizontalAlignment: Alignment
+  let verticalAlignment: Alignment
   let children: [Widget]
 
-  init(tag: Int32?, children: [Widget]) {
+  init(
+    tag: Int32?, width: Double, height: Double, horizontalAlignment: Alignment,
+    verticalAlignment: Alignment, children: [Widget]
+  ) {
+    self.width = width
+    self.height = height
+    self.horizontalAlignment = horizontalAlignment
+    self.verticalAlignment = verticalAlignment
     self.children = children
     super.init(tag: tag)
   }
 
   required init?(data: Data) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 28
 
     var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
@@ -26,25 +37,47 @@ class Column: Widget {
       ptr += 4
     }
 
+    let width: Double = data.read(at: ptr)
+    ptr += 8
+
+    let height: Double = data.read(at: ptr)
+    ptr += 8
+
+    let horizontalAlignmentRawValue: Int8 = data.read(at: ptr)
+    ptr += 1
+    guard let horizontalAlignment = Alignment(rawValue: horizontalAlignmentRawValue) else {
+      return nil
+    }
+
+    let verticalAlignmentRawValue: Int8 = data.read(at: ptr)
+    ptr += 1
+    guard let verticalAlignment = Alignment(rawValue: verticalAlignmentRawValue) else {
+      return nil
+    }
+
     let childrenItemCount = data.readSize(at: ptr)
     ptr += 4
     var children: [Widget] = []
     children.reserveCapacity(childrenItemCount)
     for _ in 0..<childrenItemCount {
       var iItemByteSize = 0
-      guard let iItem = Widget(data: data[ptr...], bytesRead: &iItemByteSize) else {
+      guard let iItem = Widget.from(data: data[ptr...], bytesRead: &iItemByteSize) else {
         return nil
       }
       ptr += iItemByteSize
       children.append(iItem)
     }
 
+    self.width = width
+    self.height = height
+    self.horizontalAlignment = horizontalAlignment
+    self.verticalAlignment = verticalAlignment
     self.children = children
     super.init(tag: tag)
   }
 
   required init?(data: Data, bytesRead: inout Int) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 28
 
     var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
@@ -54,19 +87,41 @@ class Column: Widget {
       ptr += 4
     }
 
+    let width: Double = data.read(at: ptr)
+    ptr += 8
+
+    let height: Double = data.read(at: ptr)
+    ptr += 8
+
+    let horizontalAlignmentRawValue: Int8 = data.read(at: ptr)
+    ptr += 1
+    guard let horizontalAlignment = Alignment(rawValue: horizontalAlignmentRawValue) else {
+      return nil
+    }
+
+    let verticalAlignmentRawValue: Int8 = data.read(at: ptr)
+    ptr += 1
+    guard let verticalAlignment = Alignment(rawValue: verticalAlignmentRawValue) else {
+      return nil
+    }
+
     let childrenItemCount = data.readSize(at: ptr)
     ptr += 4
     var children: [Widget] = []
     children.reserveCapacity(childrenItemCount)
     for _ in 0..<childrenItemCount {
       var iItemByteSize = 0
-      guard let iItem = Widget(data: data[ptr...], bytesRead: &iItemByteSize) else {
+      guard let iItem = Widget.from(data: data[ptr...], bytesRead: &iItemByteSize) else {
         return nil
       }
       ptr += iItemByteSize
       children.append(iItem)
     }
 
+    self.width = width
+    self.height = height
+    self.horizontalAlignment = horizontalAlignment
+    self.verticalAlignment = verticalAlignment
     self.children = children
     super.init(tag: tag)
 
@@ -75,13 +130,13 @@ class Column: Widget {
 
   override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(28)
 
     withUnsafeBytes(of: Int32(Column_typeID)) {
       data.append(contentsOf: $0)
     }
 
-    data.append([0], count: 2 * 4)
+    data.append([0], count: 6 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0)
@@ -89,6 +144,18 @@ class Column: Widget {
     } else {
       data.write(size: -1, ofField: 0)
     }
+
+    data.write(size: 8, ofField: 1)
+    data.append(double: width)
+
+    data.write(size: 8, ofField: 2)
+    data.append(double: height)
+
+    data.write(size: 1, ofField: 3)
+    data.append(int: horizontalAlignment.rawValue)
+
+    data.write(size: 1, ofField: 4)
+    data.append(int: verticalAlignment.rawValue)
 
     data.append(size: children.count)
     var childrenByteSize: Size = 4
@@ -99,7 +166,7 @@ class Column: Widget {
       data.append(iData)
       childrenByteSize += iData.count
     }
-    data.write(size: childrenByteSize, ofField: 1)
+    data.write(size: childrenByteSize, ofField: 5)
 
     return data
   }

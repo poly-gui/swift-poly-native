@@ -27,7 +27,7 @@ class Center: Widget {
     }
 
     let childByteSize = data.readSize(ofField: 1)
-    guard let child = Widget(data: data[ptr...]) else {
+    guard let child = Widget.from(data: data[ptr...]) else {
       return nil
     }
     ptr += childByteSize
@@ -48,7 +48,7 @@ class Center: Widget {
     }
 
     let childByteSize = data.readSize(ofField: 1)
-    guard let child = Widget(data: data[ptr...]) else {
+    guard let child = Widget.from(data: data[ptr...]) else {
       return nil
     }
     ptr += childByteSize
