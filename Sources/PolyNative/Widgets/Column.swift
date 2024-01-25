@@ -9,11 +9,11 @@ import AppKit
 import Foundation
 
 @MainActor
-func makeColumn<Parent: NSView>(with message: Column, parent: Parent, commit: ViewCommiter<Parent>) -> NSStackView? {
+func makeColumn<Parent: NSView>(with message: Column, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
     let stackView = NSStackView()
 
     stackView.orientation = .vertical
-    
+
     switch message.horizontalAlignment {
     case .center:
         stackView.alignment = .centerX
@@ -26,7 +26,7 @@ func makeColumn<Parent: NSView>(with message: Column, parent: Parent, commit: Vi
     default:
         break
     }
-    
+
     let gravity: NSStackView.Gravity
     switch message.verticalAlignment {
     case .start:
@@ -38,9 +38,9 @@ func makeColumn<Parent: NSView>(with message: Column, parent: Parent, commit: Vi
     default:
         gravity = .center
     }
-    
+
     for child in message.children {
-        guard makeWidget(with: child, parent: stackView, commit: { child, parent in
+        guard makeWidget(with: child, parent: stackView, context: context, commit: { child, parent in
             parent.addView(child, in: gravity)
         }) != nil else {
             return nil
@@ -48,7 +48,7 @@ func makeColumn<Parent: NSView>(with message: Column, parent: Parent, commit: Vi
     }
 
     commit(stackView, parent)
-    
+
     if message.width != minContent {
         if message.width == fillParent {
             stackView.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true

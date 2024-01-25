@@ -12,39 +12,39 @@ import NanoPack
 open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private var windowManager = WindowManager()
     
+    private var applicationContext: ApplicationContext?
+    
     open func applicationDidFinishLaunching(_ notification: Notification) {
         guard let portableBinaryPath = Bundle.main.path(forResource: "bundle", ofType: nil) else {
             return
         }
         
         let portableLayerProcess = Process()
-        let stdout = Pipe()
-        let stdin = Pipe()
+        portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
         
-        if #available(macOS 13.0, *) {
-            portableLayerProcess.executableURL = URL(filePath: portableBinaryPath)
-        } else {
-            portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
+        let messageChannel = StandardIOMessageChannel(process: portableLayerProcess)
+        Task {
+            for await messageData in messageChannel.messages {
+                let typeID = messageData[0 ..< 4].withUnsafeBytes {
+                    $0.load(as: Int32.self).littleEndian
+                }
+                
+                guard let message = makeNanoPackMessage(from: messageData, typeID: Int(typeID)) else {
+                    #if DEBUG
+                    if let log = String(data: messageData, encoding: .utf8) {
+                        print("VERBOSE: \(log)")
+                    }
+                    #endif
+                    return
+                }
+                
+                await self.handleMessage(message)
+            }
         }
-        portableLayerProcess.standardOutput = stdout
-        portableLayerProcess.standardInput = stdin
         
-        stdout.fileHandleForReading.readabilityHandler = { pipe in
-            let data = pipe.availableData
-            guard !data.isEmpty else {
-                return
-            }
-            
-            let typeID = data[4 ..< 8].withUnsafeBytes {
-                $0.load(as: Int32.self).littleEndian
-            }
-            
-            guard let message = makeNanoPackMessage(from: data[4...], typeID: Int(typeID)) else {
-                return
-            }
-            
-            self.handleMessage(message)
-        }
+        applicationContext = ApplicationContext(
+            messageChannel: messageChannel
+        )
         
         do {
             try portableLayerProcess.run()
@@ -53,16 +53,21 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
-    private func handleMessage(_ message: NanoPackMessage) {
+    private func handleMessage(_ message: NanoPackMessage) async {
         switch message.typeID {
         case CreateWindow_typeID:
-            Task {
-                await MainActor.run { self.createWindow(message: message as! CreateWindow) }
-            }
+            await MainActor.run { self.createWindow(message: message as! CreateWindow) }
             
         case CreateWidget_typeID:
-            Task {
-                await MainActor.run { self.createView(message: message as! CreateWidget) }
+            await MainActor.run { self.createView(message: message as! CreateWidget) }
+            
+        case UpdateWidget_typeID:
+            await MainActor.run { self.updateView(message: message as! UpdateWidget) }
+            
+        case UpdateWidgets_typeID:
+            let msg = message as! UpdateWidgets
+            for update in msg.updates {
+                await MainActor.run { self.updateView(message: update) }
             }
             
         default:
@@ -87,9 +92,21 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     
     @MainActor
     private func createView(message: CreateWidget) {
-        guard let rootView = windowManager.findWindow(withTag: message.windowTag)?.contentView else {
+        guard let rootView = windowManager.findWindow(withTag: message.windowTag)?.contentView,
+              let context = applicationContext
+        else {
             return
         }
-        _ = makeWidget(with: message.widget, parent: rootView)
+        _ = makeWidget(with: message.widget, parent: rootView, context: context)
+    }
+    
+    @MainActor
+    private func updateView(message: UpdateWidget) {
+        guard let context = applicationContext,
+              let view = context.viewRegistry.viewWithTag(message.tag)
+        else {
+            return
+        }
+        updateWidget(old: view, new: message.widget, context: context)
     }
 }

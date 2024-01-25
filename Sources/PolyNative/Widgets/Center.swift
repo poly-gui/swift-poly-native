@@ -9,8 +9,8 @@ import AppKit
 import Foundation
 
 @MainActor
-func makeCenter<Parent: NSView>(with message: Center, parent: Parent, commit: ViewCommiter<Parent>) -> NSView? {
-    guard let child = makeWidget(with: message.child, parent: parent, commit: commit) else {
+func makeCenter<Parent: NSView>(with message: Center, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSView? {
+    guard let child = makeWidget(with: message.child, parent: parent, context: context, commit: commit) else {
         return nil
     }
     

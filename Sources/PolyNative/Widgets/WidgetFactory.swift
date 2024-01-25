@@ -16,18 +16,33 @@ func defaultCommit<Parent: NSView>(_ child: NSView, _ parent: Parent) -> Void {
 }
 
 @MainActor
-func makeWidget<Parent: NSView>(with message: Widget, parent: Parent, commit: ViewCommiter<Parent> = defaultCommit(_:_:)) -> NSView? {
+func makeWidget<Parent: NSView>(with message: Widget, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent> = defaultCommit(_:_:)) -> NSView? {
+    var view: NSView?
+
     switch message.typeID {
     case Text_typeID:
-        return makeText(with: message as! Text, parent: parent, commit: commit)
+        view = makeText(with: message as! Text, parent: parent, commit: commit)
 
     case Center_typeID:
-        return makeCenter(with: message as! Center, parent: parent, commit: commit)
-        
+        view = makeCenter(with: message as! Center, parent: parent, context: context, commit: commit)
+
     case Column_typeID:
-        return makeColumn(with: message as! Column, parent: parent, commit: commit)
+        view = makeColumn(with: message as! Column, parent: parent, context: context, commit: commit)
+
+    case Button_typeID:
+        view = makeButton(with: message as! Button, parent: parent, context: context, commit: commit)
 
     default:
         return nil
     }
+
+    guard let view else {
+        return nil
+    }
+
+    if let tag = message.tag {
+        context.viewRegistry.registry(view: view, with: tag)
+    }
+
+    return view
 }
