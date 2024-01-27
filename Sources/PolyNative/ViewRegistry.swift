@@ -8,18 +8,20 @@
 import AppKit
 import Foundation
 
-class ViewRegistry {
-    private var views: [Int32: NSView] = [:]
+typealias ViewTag = Int32
 
-    func registry(view: NSView, with tag: Int32) {
+class ViewRegistry {
+    private var views: [ViewTag: NSView] = [:]
+
+    func registry(view: NSView, with tag: ViewTag) {
         views[tag] = view
     }
 
-    func forget(viewWithTag: Int32) {
+    func forget(viewWithTag: ViewTag) {
         views.removeValue(forKey: viewWithTag)
     }
 
-    func viewWithTag(_ tag: Int32) -> NSView? {
+    func viewWithTag(_ tag: ViewTag) -> NSView? {
         return views[tag]
     }
 }

@@ -8,17 +8,38 @@
 import AppKit
 import Foundation
 
+class PolyButton: NSButton {
+    private(set) var onClickCallbackHandle: CallbackHandle?
+
+    convenience init(message: Button, context: ApplicationContext) {
+        let callback = OnClickCallback(handle: message.onClick, context: context)
+        context.callbackRegistry.register(callback)
+        self.init(title: message.text, target: callback, action: #selector(OnClickCallback.call(_:)))
+        self.onClickCallbackHandle = message.onClick
+    }
+
+    func registerOnClickHandle(_ handle: CallbackHandle, context: ApplicationContext) {
+        let callback = OnClickCallback(handle: handle, context: context)
+        context.callbackRegistry.register(callback)
+        self.target = callback
+        self.action = #selector(OnClickCallback.call(_:))
+        self.onClickCallbackHandle = handle
+    }
+}
+
 @MainActor
-func makeButton<Parent: NSView>(with message: Button, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSButton {
-    let callback = OnClickCallback(handle: message.onClick, context: context)
-
-    let btn = NSButton(title: message.text, target: callback, action: #selector(OnClickCallback.call(_:)))
-
-    context.callbackRegistry.register(callback)
-
+func makeButton<Parent: NSView>(with message: Button, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSButton? {
+    let btn = PolyButton(message: message, context: context)
     commit(btn, parent)
-
     return btn
+}
+
+@MainActor
+func updateButton(current btn: PolyButton, new config: Button, context: ApplicationContext) {
+    btn.title = config.text
+    if btn.onClickCallbackHandle == nil || btn.onClickCallbackHandle != config.onClick {
+        btn.registerOnClickHandle(config.onClick, context: context)
+    }
 }
 
 class OnClickCallback: Callback {
@@ -43,6 +64,6 @@ class OnClickCallback: Callback {
         }
 
         let invokeCallback = InvokeCallback(handle: handle, args: clickEventData)
-        context.messageChannel.send(message: invokeCallback)
+        self.context.messageChannel.send(message: invokeCallback)
     }
 }

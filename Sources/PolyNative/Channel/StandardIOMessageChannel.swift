@@ -16,7 +16,6 @@ class StandardIOMessageChannel: MessageChannel {
         AsyncStream { continuation in
             stdout.fileHandleForReading.readabilityHandler = { pipe in
                 let data = pipe.availableData
-                print(data.count)
                 guard !data.isEmpty else {
                     return
                 }

@@ -13,6 +13,8 @@ func updateWidget(old view: NSView, new widget: Widget, context: ApplicationCont
     switch widget.typeID {
     case Text_typeID:
         updateText(current: view as! NSTextField, new: widget as! Text)
+    case Button_typeID:
+        updateButton(current: view as! PolyButton, new: widget as! Button, context: context)
     default:
         break
     }
