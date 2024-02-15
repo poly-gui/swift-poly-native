@@ -13,10 +13,11 @@ class Widget: NanoPackMessage {
   static func from(data: Data) -> Widget? {
     switch data.readTypeID() {
     case 100: return Widget(data: data)
-    case 102: return Center(data: data)
-    case 104: return Button(data: data)
-    case 101: return Text(data: data)
     case 103: return Column(data: data)
+    case 102: return Center(data: data)
+    case 101: return Text(data: data)
+    case 104: return Button(data: data)
+    case 105: return TextField(data: data)
     default: return nil
     }
   }
@@ -24,10 +25,11 @@ class Widget: NanoPackMessage {
   static func from(data: Data, bytesRead: inout Int) -> Widget? {
     switch data.readTypeID() {
     case 100: return Widget(data: data, bytesRead: &bytesRead)
-    case 102: return Center(data: data, bytesRead: &bytesRead)
-    case 104: return Button(data: data, bytesRead: &bytesRead)
-    case 101: return Text(data: data, bytesRead: &bytesRead)
     case 103: return Column(data: data, bytesRead: &bytesRead)
+    case 102: return Center(data: data, bytesRead: &bytesRead)
+    case 101: return Text(data: data, bytesRead: &bytesRead)
+    case 104: return Button(data: data, bytesRead: &bytesRead)
+    case 105: return TextField(data: data, bytesRead: &bytesRead)
     default: return nil
     }
   }
@@ -67,21 +69,42 @@ class Widget: NanoPackMessage {
   }
 
   func data() -> Data? {
+    let offset = 0
+
     var data = Data()
     data.reserveCapacity(8)
 
-    withUnsafeBytes(of: Int32(Widget_typeID)) {
-      data.append(contentsOf: $0)
-    }
-
+    data.append(int: Int32(Widget_typeID))
     data.append([0], count: 1 * 4)
 
     if let tag = self.tag {
-      data.write(size: 4, ofField: 0)
+      data.write(size: 4, ofField: 0, offset: offset)
       data.append(int: tag)
     } else {
-      data.write(size: -1, ofField: 0)
+      data.write(size: -1, ofField: 0, offset: offset)
     }
+
+    return data
+  }
+
+  func dataWithLengthPrefix() -> Data? {
+    let offset = 4
+
+    var data = Data()
+    data.reserveCapacity(8 + 4)
+
+    data.append(int: Int32(0))
+    data.append(int: Int32(Widget_typeID))
+    data.append([0], count: 1 * 4)
+
+    if let tag = self.tag {
+      data.write(size: 4, ofField: 0, offset: offset)
+      data.append(int: tag)
+    } else {
+      data.write(size: -1, ofField: 0, offset: offset)
+    }
+
+    data.write(size: data.count, at: 0)
 
     return data
   }

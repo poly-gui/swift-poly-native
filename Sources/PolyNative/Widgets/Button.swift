@@ -27,21 +27,6 @@ class PolyButton: NSButton {
     }
 }
 
-@MainActor
-func makeButton<Parent: NSView>(with message: Button, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSButton? {
-    let btn = PolyButton(message: message, context: context)
-    commit(btn, parent)
-    return btn
-}
-
-@MainActor
-func updateButton(current btn: PolyButton, new config: Button, context: ApplicationContext) {
-    btn.title = config.text
-    if btn.onClickCallbackHandle == nil || btn.onClickCallbackHandle != config.onClick {
-        btn.registerOnClickHandle(config.onClick, context: context)
-    }
-}
-
 class OnClickCallback: Callback {
     let handle: Int32
 
@@ -65,5 +50,20 @@ class OnClickCallback: Callback {
 
         let invokeCallback = InvokeCallback(handle: handle, args: clickEventData)
         self.context.messageChannel.send(message: invokeCallback)
+    }
+}
+
+@MainActor
+func makeButton<Parent: NSView>(with message: Button, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSButton? {
+    let btn = PolyButton(message: message, context: context)
+    commit(btn, parent)
+    return btn
+}
+
+@MainActor
+func updateButton(current btn: PolyButton, new config: Button, context: ApplicationContext) {
+    btn.title = config.text
+    if btn.onClickCallbackHandle == nil || btn.onClickCallbackHandle != config.onClick {
+        btn.registerOnClickHandle(config.onClick, context: context)
     }
 }

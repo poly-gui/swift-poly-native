@@ -70,27 +70,54 @@ class Button: Widget {
   }
 
   override func data() -> Data? {
+    let offset = 0
+
     var data = Data()
     data.reserveCapacity(16)
 
-    withUnsafeBytes(of: Int32(Button_typeID)) {
-      data.append(contentsOf: $0)
-    }
-
+    data.append(int: Int32(Button_typeID))
     data.append([0], count: 3 * 4)
 
     if let tag = self.tag {
-      data.write(size: 4, ofField: 0)
+      data.write(size: 4, ofField: 0, offset: offset)
       data.append(int: tag)
     } else {
-      data.write(size: -1, ofField: 0)
+      data.write(size: -1, ofField: 0, offset: offset)
     }
 
-    data.write(size: text.lengthOfBytes(using: .utf8), ofField: 1)
+    data.write(size: text.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
     data.append(string: text)
 
-    data.write(size: 4, ofField: 2)
+    data.write(size: 4, ofField: 2, offset: offset)
     data.append(int: onClick)
+
+    return data
+  }
+
+  override func dataWithLengthPrefix() -> Data? {
+    let offset = 4
+
+    var data = Data()
+    data.reserveCapacity(16 + 4)
+
+    data.append(int: Int32(0))
+    data.append(int: Int32(Button_typeID))
+    data.append([0], count: 3 * 4)
+
+    if let tag = self.tag {
+      data.write(size: 4, ofField: 0, offset: offset)
+      data.append(int: tag)
+    } else {
+      data.write(size: -1, ofField: 0, offset: offset)
+    }
+
+    data.write(size: text.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
+    data.append(string: text)
+
+    data.write(size: 4, ofField: 2, offset: offset)
+    data.append(int: onClick)
+
+    data.write(size: data.count, at: 0)
 
     return data
   }

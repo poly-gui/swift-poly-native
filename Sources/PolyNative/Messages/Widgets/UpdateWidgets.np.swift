@@ -55,13 +55,12 @@ class UpdateWidgets: NanoPackMessage {
   }
 
   func data() -> Data? {
+    let offset = 0
+
     var data = Data()
     data.reserveCapacity(8)
 
-    withUnsafeBytes(of: Int32(UpdateWidgets_typeID)) {
-      data.append(contentsOf: $0)
-    }
-
+    data.append(int: Int32(UpdateWidgets_typeID))
     data.append([0], count: 1 * 4)
 
     data.append(size: updates.count)
@@ -73,7 +72,33 @@ class UpdateWidgets: NanoPackMessage {
       data.append(iData)
       updatesByteSize += iData.count
     }
-    data.write(size: updatesByteSize, ofField: 0)
+    data.write(size: updatesByteSize, ofField: 0, offset: offset)
+
+    return data
+  }
+
+  func dataWithLengthPrefix() -> Data? {
+    let offset = 4
+
+    var data = Data()
+    data.reserveCapacity(8 + 4)
+
+    data.append(int: Int32(0))
+    data.append(int: Int32(UpdateWidgets_typeID))
+    data.append([0], count: 1 * 4)
+
+    data.append(size: updates.count)
+    var updatesByteSize: Size = 4
+    for i in updates {
+      guard let iData = i.data() else {
+        return nil
+      }
+      data.append(iData)
+      updatesByteSize += iData.count
+    }
+    data.write(size: updatesByteSize, ofField: 0, offset: offset)
+
+    data.write(size: data.count, at: 0)
 
     return data
   }

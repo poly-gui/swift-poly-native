@@ -32,7 +32,7 @@ class StandardIOMessageChannel: MessageChannel {
     }
 
     func send(message: NanoPackMessage) {
-        if let data = message.data() {
+        if let data = message.dataWithLengthPrefix() {
             stdin.fileHandleForWriting.write(data)
         }
     }

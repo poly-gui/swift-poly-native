@@ -22,6 +22,9 @@ func makeWidget<Parent: NSView>(with message: Widget, parent: Parent, context: A
     switch message.typeID {
     case Text_typeID:
         view = makeText(with: message as! Text, parent: parent, commit: commit)
+        
+    case TextField_typeID:
+        view = makeTextField(with: message as! TextField, parent: parent, context: context, commit: commit)
 
     case Center_typeID:
         view = makeCenter(with: message as! Center, parent: parent, context: context, commit: commit)

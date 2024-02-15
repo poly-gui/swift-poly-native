@@ -51,23 +51,46 @@ class UpdateWidget: NanoPackMessage {
   }
 
   func data() -> Data? {
+    let offset = 0
+
     var data = Data()
     data.reserveCapacity(12)
 
-    withUnsafeBytes(of: Int32(UpdateWidget_typeID)) {
-      data.append(contentsOf: $0)
-    }
-
+    data.append(int: Int32(UpdateWidget_typeID))
     data.append([0], count: 2 * 4)
 
-    data.write(size: 4, ofField: 0)
+    data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: tag)
 
     guard let widgetData = widget.data() else {
       return nil
     }
-    data.write(size: widgetData.count, ofField: 1)
+    data.write(size: widgetData.count, ofField: 1, offset: offset)
     data.append(widgetData)
+
+    return data
+  }
+
+  func dataWithLengthPrefix() -> Data? {
+    let offset = 4
+
+    var data = Data()
+    data.reserveCapacity(12 + 4)
+
+    data.append(int: Int32(0))
+    data.append(int: Int32(UpdateWidget_typeID))
+    data.append([0], count: 2 * 4)
+
+    data.write(size: 4, ofField: 0, offset: offset)
+    data.append(int: tag)
+
+    guard let widgetData = widget.data() else {
+      return nil
+    }
+    data.write(size: widgetData.count, ofField: 1, offset: offset)
+    data.append(widgetData)
+
+    data.write(size: data.count, at: 0)
 
     return data
   }

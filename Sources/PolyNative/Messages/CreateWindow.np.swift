@@ -93,29 +93,58 @@ class CreateWindow: NanoPackMessage {
   }
 
   func data() -> Data? {
+    let offset = 0
+
     var data = Data()
     data.reserveCapacity(24)
 
-    withUnsafeBytes(of: Int32(CreateWindow_typeID)) {
-      data.append(contentsOf: $0)
-    }
-
+    data.append(int: Int32(CreateWindow_typeID))
     data.append([0], count: 5 * 4)
 
-    data.write(size: title.lengthOfBytes(using: .utf8), ofField: 0)
+    data.write(size: title.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)
     data.append(string: title)
 
-    data.write(size: description.lengthOfBytes(using: .utf8), ofField: 1)
+    data.write(size: description.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
     data.append(string: description)
 
-    data.write(size: 4, ofField: 2)
+    data.write(size: 4, ofField: 2, offset: offset)
     data.append(int: width)
 
-    data.write(size: 4, ofField: 3)
+    data.write(size: 4, ofField: 3, offset: offset)
     data.append(int: height)
 
-    data.write(size: tag.lengthOfBytes(using: .utf8), ofField: 4)
+    data.write(size: tag.lengthOfBytes(using: .utf8), ofField: 4, offset: offset)
     data.append(string: tag)
+
+    return data
+  }
+
+  func dataWithLengthPrefix() -> Data? {
+    let offset = 4
+
+    var data = Data()
+    data.reserveCapacity(24 + 4)
+
+    data.append(int: Int32(0))
+    data.append(int: Int32(CreateWindow_typeID))
+    data.append([0], count: 5 * 4)
+
+    data.write(size: title.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)
+    data.append(string: title)
+
+    data.write(size: description.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
+    data.append(string: description)
+
+    data.write(size: 4, ofField: 2, offset: offset)
+    data.append(int: width)
+
+    data.write(size: 4, ofField: 3, offset: offset)
+    data.append(int: height)
+
+    data.write(size: tag.lengthOfBytes(using: .utf8), ofField: 4, offset: offset)
+    data.append(string: tag)
+
+    data.write(size: data.count, at: 0)
 
     return data
   }

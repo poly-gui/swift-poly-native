@@ -25,11 +25,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         let messageChannel = StandardIOMessageChannel(process: portableLayerProcess)
         Task {
             for await messageData in messageChannel.messages {
-                let typeID = messageData[0 ..< 4].withUnsafeBytes {
-                    $0.load(as: Int32.self).littleEndian
-                }
-                
-                guard let message = makeNanoPackMessage(from: messageData, typeID: Int(typeID)) else {
+                guard let message = makeNanoPackMessage(from: messageData[4...]) else {
                     #if DEBUG
                     if let log = String(data: messageData, encoding: .utf8) {
                         print("VERBOSE: \(log)")
