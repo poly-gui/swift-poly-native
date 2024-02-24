@@ -31,9 +31,9 @@ func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: Applica
     case .bottom:
         stackView.alignment = .bottom
     case .start:
-        stackView.alignment = .leading
+        stackView.alignment = .top
     case .end:
-        stackView.alignment = .trailing
+        stackView.alignment = .bottom
     default:
         break
     }
