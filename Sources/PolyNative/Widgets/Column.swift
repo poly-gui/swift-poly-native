@@ -9,7 +9,7 @@ import AppKit
 import Foundation
 
 @MainActor
-func makeColumn<Parent: NSView>(with message: Column, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
+func makeColumn(with message: Column, context: ApplicationContext) -> NSStackView? {
     let stackView = NSStackView()
 
     stackView.orientation = .vertical
@@ -45,6 +45,15 @@ func makeColumn<Parent: NSView>(with message: Column, parent: Parent, context: A
         }) != nil else {
             return nil
         }
+    }
+
+    return stackView
+}
+
+@MainActor
+func makeColumn<Parent: NSView>(with message: Column, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
+    guard let stackView = makeColumn(with: message, context: context) else {
+        return nil
     }
 
     commit(stackView, parent)

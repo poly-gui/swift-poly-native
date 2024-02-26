@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Kenneth Ng on 22/02/2024.
 //
@@ -9,7 +9,7 @@ import AppKit
 import Foundation
 
 @MainActor
-func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
+func makeRow(with message: Row, context: ApplicationContext) -> NSStackView? {
     let stackView = NSStackView()
     stackView.orientation = .horizontal
     
@@ -44,6 +44,15 @@ func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: Applica
         }) != nil else {
             return nil
         }
+    }
+    
+    return stackView
+}
+
+@MainActor
+func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
+    guard let stackView = makeRow(with: message, context: context) else {
+        return nil
     }
     
     commit(stackView, parent)

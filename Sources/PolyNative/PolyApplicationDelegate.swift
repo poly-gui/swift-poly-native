@@ -23,20 +23,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
         
         let messageChannel = StandardIOMessageChannel(process: portableLayerProcess)
-        Task {
-            for await messageData in messageChannel.messages {
-                guard let message = makeNanoPackMessage(from: messageData[4...]) else {
-                    #if DEBUG
-                    if let log = String(data: messageData, encoding: .utf8) {
-                        print("VERBOSE: \(log)")
-                    }
-                    #endif
-                    return
-                }
-                
-                await self.handleMessage(message)
-            }
-        }
+        listenToIncomingMessages(from: messageChannel)
         
         applicationContext = ApplicationContext(
             messageChannel: messageChannel
@@ -46,6 +33,24 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
             try portableLayerProcess.run()
         } catch let err {
             print("Unable to start portable layer process: \(String(describing: err))")
+        }
+    }
+    
+    private func listenToIncomingMessages(from channel: MessageChannel) {
+        Task {
+            for await messageData in channel.messages {
+                guard let message = makeNanoPackMessage(from: messageData[4...]) else {
+                    #if DEBUG
+                    if let log = String(data: messageData, encoding: .utf8) {
+                        NSLog("VERBOSE: \(log)")
+                    } else {
+                        NSLog("WARNING: failed to decode message received from portable layer")
+                    }
+                    #endif
+                    continue
+                }
+                await self.handleMessage(message)
+            }
         }
     }
     
@@ -62,11 +67,18 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
             
         case UpdateWidgets_typeID:
             let msg = message as! UpdateWidgets
-            for update in msg.updates {
-                await MainActor.run { self.updateView(message: update) }
+            await MainActor.run {
+                for update in msg.updates {
+                    self.updateView(message: update)
+                }
             }
-            
+
+        case ReplyFromCallback_typeID:
+            let msg = message as! ReplyFromCallback
+            applicationContext?.rpc.reply(to: msg.to, data: msg.args)
+
         default:
+            NSLog("tf is message \(message.typeID)")
             break
         }
     }

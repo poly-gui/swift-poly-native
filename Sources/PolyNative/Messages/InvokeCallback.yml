@@ -1,4 +1,5 @@
 InvokeCallback:
   typeid: 2
-  handle: int32:0
-  args: any:1
+  handle: int32
+  args: any
+  replyTo: int32?

@@ -9,6 +9,11 @@ import AppKit
 import Foundation
 
 @MainActor
+func makeText(with message: Text) -> NSTextField {
+    return NSTextField(labelWithString: message.content)
+}
+
+@MainActor
 func makeText<Parent: NSView>(with message: Text, parent: Parent, commit: ViewCommiter<Parent>) -> NSTextField {
     let text = NSTextField(labelWithString: message.content)
     commit(text, parent)

@@ -10,14 +10,16 @@ class InvokeCallback: NanoPackMessage {
 
   let handle: Int32
   let args: Data
+  let replyTo: Int32?
 
-  init(handle: Int32, args: Data) {
+  init(handle: Int32, args: Data, replyTo: Int32?) {
     self.handle = handle
     self.args = args
+    self.replyTo = replyTo
   }
 
   required init?(data: Data) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 16
 
     let handle: Int32 = data.read(at: ptr)
     ptr += 4
@@ -26,12 +28,21 @@ class InvokeCallback: NanoPackMessage {
     let args = data[ptr..<ptr + argsByteSize]
     ptr += argsByteSize
 
+    var replyTo: Int32?
+    if data.readSize(ofField: 2) < 0 {
+      replyTo = nil
+    } else {
+      replyTo = data.read(at: ptr)
+      ptr += 4
+    }
+
     self.handle = handle
     self.args = args
+    self.replyTo = replyTo
   }
 
   required init?(data: Data, bytesRead: inout Int) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 16
 
     let handle: Int32 = data.read(at: ptr)
     ptr += 4
@@ -40,8 +51,17 @@ class InvokeCallback: NanoPackMessage {
     let args = data[ptr..<ptr + argsByteSize]
     ptr += argsByteSize
 
+    var replyTo: Int32?
+    if data.readSize(ofField: 2) < 0 {
+      replyTo = nil
+    } else {
+      replyTo = data.read(at: ptr)
+      ptr += 4
+    }
+
     self.handle = handle
     self.args = args
+    self.replyTo = replyTo
 
     bytesRead = ptr - data.startIndex
   }
@@ -50,16 +70,23 @@ class InvokeCallback: NanoPackMessage {
     let offset = 0
 
     var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(16)
 
     data.append(int: Int32(InvokeCallback_typeID))
-    data.append([0], count: 2 * 4)
+    data.append([0], count: 3 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: handle)
 
     data.write(size: args.count, ofField: 1, offset: offset)
     data.append(args)
+
+    if let replyTo = self.replyTo {
+      data.write(size: 4, ofField: 2, offset: offset)
+      data.append(int: replyTo)
+    } else {
+      data.write(size: -1, ofField: 2, offset: offset)
+    }
 
     return data
   }
@@ -68,17 +95,24 @@ class InvokeCallback: NanoPackMessage {
     let offset = 4
 
     var data = Data()
-    data.reserveCapacity(12 + 4)
+    data.reserveCapacity(16 + 4)
 
     data.append(int: Int32(0))
     data.append(int: Int32(InvokeCallback_typeID))
-    data.append([0], count: 2 * 4)
+    data.append([0], count: 3 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: handle)
 
     data.write(size: args.count, ofField: 1, offset: offset)
     data.append(args)
+
+    if let replyTo = self.replyTo {
+      data.write(size: 4, ofField: 2, offset: offset)
+      data.append(int: replyTo)
+    } else {
+      data.write(size: -1, ofField: 2, offset: offset)
+    }
 
     data.write(size: data.count, at: 0)
 

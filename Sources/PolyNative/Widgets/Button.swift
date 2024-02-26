@@ -48,13 +48,18 @@ class OnClickCallback: Callback {
             return
         }
 
-        let invokeCallback = InvokeCallback(handle: handle, args: clickEventData)
+        let invokeCallback = InvokeCallback(handle: handle, args: clickEventData, replyTo: nil)
         self.context.messageChannel.send(message: invokeCallback)
     }
 }
 
 @MainActor
-func makeButton<Parent: NSView>(with message: Button, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSButton? {
+func makeButton(with message: Button, context: ApplicationContext) -> NSButton {
+    return PolyButton(message: message, context: context)
+}
+
+@MainActor
+func makeButton<Parent: NSView>(with message: Button, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSButton {
     let btn = PolyButton(message: message, context: context)
     commit(btn, parent)
     return btn

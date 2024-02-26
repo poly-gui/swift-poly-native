@@ -9,12 +9,14 @@ import Foundation
 
 class ApplicationContext {
     let messageChannel: MessageChannel
-    var callbackRegistry: CallbackRegistry
-    var viewRegistry: ViewRegistry
+    let callbackRegistry: CallbackRegistry
+    let viewRegistry: ViewRegistry
+    let rpc: RPC
 
     init(messageChannel: MessageChannel) {
         self.messageChannel = messageChannel
         self.callbackRegistry = CallbackRegistry()
         self.viewRegistry = ViewRegistry()
+        self.rpc = RPC(through: messageChannel)
     }
 }

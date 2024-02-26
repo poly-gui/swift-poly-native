@@ -67,8 +67,13 @@ class ValueChangedCallback: Callback {
         guard let argData = onValueChanged.data() else {
             return
         }
-        context.messageChannel.send(message: InvokeCallback(handle: handle, args: argData))
+        context.messageChannel.send(message: InvokeCallback(handle: handle, args: argData, replyTo: nil))
     }
+}
+
+@MainActor
+func makeTextField(with message: TextField, context: ApplicationContext) -> NSTextField {
+    return PolyTextField(message: message, context: context)
 }
 
 @MainActor
