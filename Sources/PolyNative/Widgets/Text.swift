@@ -23,4 +23,5 @@ func makeText<Parent: NSView>(with message: Text, parent: Parent, commit: ViewCo
 @MainActor
 func updateText(current text: NSTextField, new config: Text) {
     text.stringValue = config.content
+    text.sizeToFit()
 }

@@ -52,33 +52,22 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
         if item.isReused, let itemView = item.itemView {
             updateWidget(old: itemView, new: widget, context: context)
         } else {
-            guard let widget = makeWidget(with: widget, context: context) else {
-                return NSCollectionViewItem()
-            }
-            item.itemView = widget
+            item.itemView = makeWidget(with: widget, parent: item.view, context: context)
         }
-        
+
         return item
     }
 }
 
 class PolyListViewItem: NSCollectionViewItem {
     static let identifier = NSUserInterfaceItemIdentifier("ListViewItem")
-    
-    var itemView: NSView? {
-        didSet {
-            if let itemView {
-                self.view.addSubview(itemView)
-            } else {
-                oldValue?.removeFromSuperview()
-            }
-        }
-    }
-    
+
     private(set) var isReused = false
     
+    var itemView: NSView? = nil
+    
     override func loadView() {
-        self.view = NSView()
+        view = NSView()
     }
 
     override func prepareForReuse() {
@@ -86,44 +75,56 @@ class PolyListViewItem: NSCollectionViewItem {
     }
 }
 
-class PolyListView: NSCollectionView, NSCollectionViewDelegate {
-    private var _dataSource: ListViewDataSource? = nil
+class PolyListViewDelegate: NSObject, NSCollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {}
     
-    convenience init(message: ListView, context: ApplicationContext) {
+    func collectionView(_ collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> NSSize {
+        return NSSize(width: collectionView.bounds.width, height: 40)
+    }
+}
+
+class PolyListView: NSScrollView {
+    private var dataSource: ListViewDataSource? = nil
+    private var collectionViewDelegate: PolyListViewDelegate? = nil
+    
+    convenience init(_ context: ApplicationContext, _ message: ListView) {
         self.init()
         
-        let layout = NSCollectionViewGridLayout()
-        layout.maximumNumberOfColumns = 1
-        layout.minimumLineSpacing = 10.0
-        layout.maximumItemSize = NSSize(width: bounds.size.width, height: 0.0)
-        layout.minimumItemSize = NSSize(width: bounds.size.width, height: 0.0)
+        let collectionView = NSCollectionView()
+        
+        let layout = NSCollectionViewFlowLayout()
         
         let dataSource = ListViewDataSource(context, renderItem: message.renderItem, sections: message.sectionCounts)
         let delegate = PolyListViewDelegate()
         
-        _dataSource = dataSource
         self.dataSource = dataSource
-        self.delegate = delegate
-        collectionViewLayout = layout
-        register(PolyListViewItem.self, forItemWithIdentifier: PolyListViewItem.identifier)
-    }
-}
+        self.collectionViewDelegate = delegate
 
-class PolyListViewDelegate: NSObject, NSCollectionViewDelegate {
-    func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
+        collectionView.dataSource = dataSource
+        collectionView.delegate = delegate
+        collectionView.collectionViewLayout = layout
+        collectionView.register(PolyListViewItem.self, forItemWithIdentifier: PolyListViewItem.identifier)
         
+        documentView = collectionView
+    }
+    
+    override func resizeSubviews(withOldSize oldSize: NSSize) {
+        super.resizeSubviews(withOldSize: oldSize)
+        if oldSize.width != bounds.width, let collectionView = documentView as? NSCollectionView {
+            collectionView.collectionViewLayout?.invalidateLayout()
+        }
     }
 }
 
 @MainActor
 func makeListView(with message: ListView, context: ApplicationContext) -> PolyListView {
-    return PolyListView(message: message, context: context)
+    return PolyListView(context, message)
 }
 
 @MainActor
-func makeListView<Parent: NSView>(with message: ListView, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> PolyListView {
-    let listView = PolyListView(message: message, context: context)
-    
+func makeListView<Parent: NSView>(with message: ListView, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSView {
+    let listView = PolyListView(context, message)
+
     commit(listView, parent)
     
     if message.width != minContent {
@@ -131,12 +132,14 @@ func makeListView<Parent: NSView>(with message: ListView, parent: Parent, contex
             listView.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true
         } else {
             listView.widthAnchor.constraint(equalToConstant: message.width).isActive = true
+            listView.widthAnchor.constraint(equalToConstant: message.width).isActive = true
         }
     }
     if message.height != minContent {
         if message.height == fillParent {
             listView.heightAnchor.constraint(equalTo: parent.heightAnchor).isActive = true
         } else {
+            listView.widthAnchor.constraint(equalToConstant: message.height).isActive = true
             listView.heightAnchor.constraint(equalToConstant: message.height).isActive = true
         }
     }
