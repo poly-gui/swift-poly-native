@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let Button_typeID: TypeID = 104
+let Button_typeID: TypeID = 320_412_644
 
 class Button: Widget {
-  override var typeID: TypeID { return 104 }
+  override var typeID: TypeID { return 320_412_644 }
 
   let text: String
   let onClick: Int32
@@ -75,7 +75,7 @@ class Button: Widget {
     var data = Data()
     data.reserveCapacity(16)
 
-    data.append(int: Int32(Button_typeID))
+    data.append(typeID: TypeID(Button_typeID))
     data.append([0], count: 3 * 4)
 
     if let tag = self.tag {
@@ -101,7 +101,7 @@ class Button: Widget {
     data.reserveCapacity(16 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(Button_typeID))
+    data.append(typeID: TypeID(Button_typeID))
     data.append([0], count: 3 * 4)
 
     if let tag = self.tag {

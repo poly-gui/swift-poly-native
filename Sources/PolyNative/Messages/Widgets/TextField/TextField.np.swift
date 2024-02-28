@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let TextField_typeID: TypeID = 105
+let TextField_typeID: TypeID = 841_129_444
 
 class TextField: Widget {
-  override var typeID: TypeID { return 105 }
+  override var typeID: TypeID { return 841_129_444 }
 
   let placeholder: String?
   let value: String
@@ -103,7 +103,7 @@ class TextField: Widget {
     var data = Data()
     data.reserveCapacity(20)
 
-    data.append(int: Int32(TextField_typeID))
+    data.append(typeID: TypeID(TextField_typeID))
     data.append([0], count: 4 * 4)
 
     if let tag = self.tag {
@@ -136,7 +136,7 @@ class TextField: Widget {
     data.reserveCapacity(20 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(TextField_typeID))
+    data.append(typeID: TypeID(TextField_typeID))
     data.append([0], count: 4 * 4)
 
     if let tag = self.tag {

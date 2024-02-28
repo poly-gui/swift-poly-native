@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let CreateWindow_typeID: TypeID = 10
+let CreateWindow_typeID: TypeID = 3_533_765_426
 
 class CreateWindow: NanoPackMessage {
-  var typeID: TypeID { return 10 }
+  var typeID: TypeID { return 3_533_765_426 }
 
   let title: String
   let description: String
@@ -98,7 +98,7 @@ class CreateWindow: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(24)
 
-    data.append(int: Int32(CreateWindow_typeID))
+    data.append(typeID: TypeID(CreateWindow_typeID))
     data.append([0], count: 5 * 4)
 
     data.write(size: title.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)
@@ -126,7 +126,7 @@ class CreateWindow: NanoPackMessage {
     data.reserveCapacity(24 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(CreateWindow_typeID))
+    data.append(typeID: TypeID(CreateWindow_typeID))
     data.append([0], count: 5 * 4)
 
     data.write(size: title.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)

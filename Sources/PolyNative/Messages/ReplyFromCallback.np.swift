@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let ReplyFromCallback_typeID: TypeID = 5
+let ReplyFromCallback_typeID: TypeID = 370_365_707
 
 class ReplyFromCallback: NanoPackMessage {
-  var typeID: TypeID { return 5 }
+  var typeID: TypeID { return 370_365_707 }
 
   let to: Int32
   let args: Data
@@ -52,7 +52,7 @@ class ReplyFromCallback: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(12)
 
-    data.append(int: Int32(ReplyFromCallback_typeID))
+    data.append(typeID: TypeID(ReplyFromCallback_typeID))
     data.append([0], count: 2 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
@@ -71,7 +71,7 @@ class ReplyFromCallback: NanoPackMessage {
     data.reserveCapacity(12 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(ReplyFromCallback_typeID))
+    data.append(typeID: TypeID(ReplyFromCallback_typeID))
     data.append([0], count: 2 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)

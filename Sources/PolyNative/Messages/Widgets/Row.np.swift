@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let Row_typeID: TypeID = 106
+let Row_typeID: TypeID = 1_006_836_449
 
 class Row: Widget {
-  override var typeID: TypeID { return 106 }
+  override var typeID: TypeID { return 1_006_836_449 }
 
   let width: Double
   let height: Double
@@ -134,7 +134,7 @@ class Row: Widget {
     var data = Data()
     data.reserveCapacity(28)
 
-    data.append(int: Int32(Row_typeID))
+    data.append(typeID: TypeID(Row_typeID))
     data.append([0], count: 6 * 4)
 
     if let tag = self.tag {
@@ -177,7 +177,7 @@ class Row: Widget {
     data.reserveCapacity(28 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(Row_typeID))
+    data.append(typeID: TypeID(Row_typeID))
     data.append([0], count: 6 * 4)
 
     if let tag = self.tag {

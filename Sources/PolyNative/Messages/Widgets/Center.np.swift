@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let Center_typeID: TypeID = 102
+let Center_typeID: TypeID = 1_855_640_887
 
 class Center: Widget {
-  override var typeID: TypeID { return 102 }
+  override var typeID: TypeID { return 1_855_640_887 }
 
   let child: Widget
 
@@ -65,7 +65,7 @@ class Center: Widget {
     var data = Data()
     data.reserveCapacity(12)
 
-    data.append(int: Int32(Center_typeID))
+    data.append(typeID: TypeID(Center_typeID))
     data.append([0], count: 2 * 4)
 
     if let tag = self.tag {
@@ -91,7 +91,7 @@ class Center: Widget {
     data.reserveCapacity(12 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(Center_typeID))
+    data.append(typeID: TypeID(Center_typeID))
     data.append([0], count: 2 * 4)
 
     if let tag = self.tag {

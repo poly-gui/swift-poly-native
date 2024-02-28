@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let Column_typeID: TypeID = 103
+let Column_typeID: TypeID = 2_415_007_766
 
 class Column: Widget {
-  override var typeID: TypeID { return 103 }
+  override var typeID: TypeID { return 2_415_007_766 }
 
   let width: Double
   let height: Double
@@ -134,7 +134,7 @@ class Column: Widget {
     var data = Data()
     data.reserveCapacity(28)
 
-    data.append(int: Int32(Column_typeID))
+    data.append(typeID: TypeID(Column_typeID))
     data.append([0], count: 6 * 4)
 
     if let tag = self.tag {
@@ -177,7 +177,7 @@ class Column: Widget {
     data.reserveCapacity(28 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(Column_typeID))
+    data.append(typeID: TypeID(Column_typeID))
     data.append([0], count: 6 * 4)
 
     if let tag = self.tag {

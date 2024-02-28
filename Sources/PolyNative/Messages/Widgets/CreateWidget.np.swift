@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let CreateWidget_typeID: TypeID = 20
+let CreateWidget_typeID: TypeID = 2_313_387_354
 
 class CreateWidget: NanoPackMessage {
-  var typeID: TypeID { return 20 }
+  var typeID: TypeID { return 2_313_387_354 }
 
   let widget: Widget
   let windowTag: String
@@ -62,7 +62,7 @@ class CreateWidget: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(12)
 
-    data.append(int: Int32(CreateWidget_typeID))
+    data.append(typeID: TypeID(CreateWidget_typeID))
     data.append([0], count: 2 * 4)
 
     guard let widgetData = widget.data() else {
@@ -84,7 +84,7 @@ class CreateWidget: NanoPackMessage {
     data.reserveCapacity(12 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(CreateWidget_typeID))
+    data.append(typeID: TypeID(CreateWidget_typeID))
     data.append([0], count: 2 * 4)
 
     guard let widgetData = widget.data() else {

@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let ListView_typeID: TypeID = 107
+let ListView_typeID: TypeID = 2_164_488_861
 
 class ListView: Widget {
-  override var typeID: TypeID { return 107 }
+  override var typeID: TypeID { return 2_164_488_861 }
 
   let width: Double
   let height: Double
@@ -97,7 +97,7 @@ class ListView: Widget {
     var data = Data()
     data.reserveCapacity(24)
 
-    data.append(int: Int32(ListView_typeID))
+    data.append(typeID: TypeID(ListView_typeID))
     data.append([0], count: 5 * 4)
 
     if let tag = self.tag {
@@ -131,7 +131,7 @@ class ListView: Widget {
     data.reserveCapacity(24 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(ListView_typeID))
+    data.append(typeID: TypeID(ListView_typeID))
     data.append([0], count: 5 * 4)
 
     if let tag = self.tag {

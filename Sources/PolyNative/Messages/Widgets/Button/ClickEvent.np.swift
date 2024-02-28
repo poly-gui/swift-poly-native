@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let ClickEvent_typeID: TypeID = 1041
+let ClickEvent_typeID: TypeID = 837_166_865
 
 class ClickEvent: NanoPackMessage {
-  var typeID: TypeID { return 1041 }
+  var typeID: TypeID { return 837_166_865 }
 
   let timestamp: Int32
 
@@ -40,7 +40,7 @@ class ClickEvent: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(8)
 
-    data.append(int: Int32(ClickEvent_typeID))
+    data.append(typeID: TypeID(ClickEvent_typeID))
     data.append([0], count: 1 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
@@ -56,7 +56,7 @@ class ClickEvent: NanoPackMessage {
     data.reserveCapacity(8 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(ClickEvent_typeID))
+    data.append(typeID: TypeID(ClickEvent_typeID))
     data.append([0], count: 1 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)

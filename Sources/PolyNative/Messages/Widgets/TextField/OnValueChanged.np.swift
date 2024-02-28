@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let OnValueChanged_typeID: TypeID = 1051
+let OnValueChanged_typeID: TypeID = 1_768_749_598
 
 class OnValueChanged: NanoPackMessage {
-  var typeID: TypeID { return 1051 }
+  var typeID: TypeID { return 1_768_749_598 }
 
   let newValue: String
 
@@ -46,7 +46,7 @@ class OnValueChanged: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(8)
 
-    data.append(int: Int32(OnValueChanged_typeID))
+    data.append(typeID: TypeID(OnValueChanged_typeID))
     data.append([0], count: 1 * 4)
 
     data.write(size: newValue.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)
@@ -62,7 +62,7 @@ class OnValueChanged: NanoPackMessage {
     data.reserveCapacity(8 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(OnValueChanged_typeID))
+    data.append(typeID: TypeID(OnValueChanged_typeID))
     data.append([0], count: 1 * 4)
 
     data.write(size: newValue.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)

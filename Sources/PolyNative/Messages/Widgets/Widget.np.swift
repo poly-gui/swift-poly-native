@@ -3,37 +3,37 @@
 import Foundation
 import NanoPack
 
-let Widget_typeID: TypeID = 100
+let Widget_typeID: TypeID = 1_676_374_721
 
 class Widget: NanoPackMessage {
-  var typeID: TypeID { return 100 }
+  var typeID: TypeID { return 1_676_374_721 }
 
   let tag: Int32?
 
   static func from(data: Data) -> Widget? {
     switch data.readTypeID() {
-    case 100: return Widget(data: data)
-    case 102: return Center(data: data)
-    case 105: return TextField(data: data)
-    case 107: return ListView(data: data)
-    case 103: return Column(data: data)
-    case 104: return Button(data: data)
-    case 101: return Text(data: data)
-    case 106: return Row(data: data)
+    case 1_676_374_721: return Widget(data: data)
+    case 320_412_644: return Button(data: data)
+    case 841_129_444: return TextField(data: data)
+    case 1_006_836_449: return Row(data: data)
+    case 1_855_640_887: return Center(data: data)
+    case 2_164_488_861: return ListView(data: data)
+    case 2_415_007_766: return Column(data: data)
+    case 3_495_336_243: return Text(data: data)
     default: return nil
     }
   }
 
   static func from(data: Data, bytesRead: inout Int) -> Widget? {
     switch data.readTypeID() {
-    case 100: return Widget(data: data, bytesRead: &bytesRead)
-    case 102: return Center(data: data, bytesRead: &bytesRead)
-    case 105: return TextField(data: data, bytesRead: &bytesRead)
-    case 107: return ListView(data: data, bytesRead: &bytesRead)
-    case 103: return Column(data: data, bytesRead: &bytesRead)
-    case 104: return Button(data: data, bytesRead: &bytesRead)
-    case 101: return Text(data: data, bytesRead: &bytesRead)
-    case 106: return Row(data: data, bytesRead: &bytesRead)
+    case 1_676_374_721: return Widget(data: data, bytesRead: &bytesRead)
+    case 320_412_644: return Button(data: data, bytesRead: &bytesRead)
+    case 841_129_444: return TextField(data: data, bytesRead: &bytesRead)
+    case 1_006_836_449: return Row(data: data, bytesRead: &bytesRead)
+    case 1_855_640_887: return Center(data: data, bytesRead: &bytesRead)
+    case 2_164_488_861: return ListView(data: data, bytesRead: &bytesRead)
+    case 2_415_007_766: return Column(data: data, bytesRead: &bytesRead)
+    case 3_495_336_243: return Text(data: data, bytesRead: &bytesRead)
     default: return nil
     }
   }
@@ -78,7 +78,7 @@ class Widget: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(8)
 
-    data.append(int: Int32(Widget_typeID))
+    data.append(typeID: TypeID(Widget_typeID))
     data.append([0], count: 1 * 4)
 
     if let tag = self.tag {
@@ -98,7 +98,7 @@ class Widget: NanoPackMessage {
     data.reserveCapacity(8 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(Widget_typeID))
+    data.append(typeID: TypeID(Widget_typeID))
     data.append([0], count: 1 * 4)
 
     if let tag = self.tag {

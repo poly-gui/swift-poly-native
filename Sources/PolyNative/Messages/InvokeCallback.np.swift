@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let InvokeCallback_typeID: TypeID = 2
+let InvokeCallback_typeID: TypeID = 2_013_877_267
 
 class InvokeCallback: NanoPackMessage {
-  var typeID: TypeID { return 2 }
+  var typeID: TypeID { return 2_013_877_267 }
 
   let handle: Int32
   let args: Data
@@ -72,7 +72,7 @@ class InvokeCallback: NanoPackMessage {
     var data = Data()
     data.reserveCapacity(16)
 
-    data.append(int: Int32(InvokeCallback_typeID))
+    data.append(typeID: TypeID(InvokeCallback_typeID))
     data.append([0], count: 3 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
@@ -98,7 +98,7 @@ class InvokeCallback: NanoPackMessage {
     data.reserveCapacity(16 + 4)
 
     data.append(int: Int32(0))
-    data.append(int: Int32(InvokeCallback_typeID))
+    data.append(typeID: TypeID(InvokeCallback_typeID))
     data.append([0], count: 3 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
