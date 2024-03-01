@@ -39,7 +39,7 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private func listenToIncomingMessages(from channel: MessageChannel) {
         Task {
             for await messageData in channel.messages {
-                guard let message = makeNanoPackMessage(from: messageData[4...]) else {
+                guard let message = makeNanoPackMessage(from: messageData) else {
                     #if DEBUG
                     if let log = String(data: messageData, encoding: .utf8) {
                         NSLog("VERBOSE: \(log)")

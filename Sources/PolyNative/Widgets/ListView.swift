@@ -10,13 +10,15 @@ import Foundation
 
 class ListViewDataSource: NSObject, NSCollectionViewDataSource {
     private let sections: [Int32]
-    private let renderItem: CallbackHandle
+    private let onCreate: CallbackHandle
+    private let onBind: CallbackHandle
     private let context: ApplicationContext
     
-    init(_ context: ApplicationContext, renderItem: CallbackHandle, sections: [Int32]) {
+    init(_ context: ApplicationContext, onCreate: CallbackHandle, onBind: CallbackHandle, sections: [Int32]) {
         self.context = context
         self.sections = sections
-        self.renderItem = renderItem
+        self.onCreate = onCreate
+        self.onBind = onBind
     }
     
     func numberOfSections(in collectionView: NSCollectionView) -> Int {
@@ -32,30 +34,72 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
             return NSCollectionViewItem()
         }
         
-        let group = DispatchGroup()
+        let renderItemConfig = RenderItemConfig(
+            sectionIndex: Int32(indexPath.section),
+            itemIndex: Int32(indexPath.item),
+            itemTag: item.tag
+        )
         
-        group.enter()
-        var widgetData: Data?
-        let renderItemConfig = RenderItemConfig(sectionIndex: Int32(indexPath.section), itemIndex: Int32(indexPath.item))
-        context.rpc.invoke(renderItem, args: renderItemConfig) { resultData in
-            widgetData = resultData
-            group.leave()
+        let ok: Bool
+        if item.isReused {
+            ok = rebind(item, with: renderItemConfig)
+        } else {
+            ok = create(item, with: renderItemConfig)
         }
-        _ = group.wait(timeout: DispatchTime.now() + DispatchTimeInterval.milliseconds(200))
         
-        guard let data = widgetData,
-              let widget = Widget.from(data: data)
-        else {
+        guard ok else {
             return NSCollectionViewItem()
         }
 
-        if item.isReused, let itemView = item.itemView {
-            updateWidget(old: itemView, new: widget, context: context)
-        } else {
-            item.itemView = makeWidget(with: widget, parent: item.view, context: context)
+        return item
+    }
+    
+    @MainActor
+    private func rebind(_ item: PolyListViewItem, with config: RenderItemConfig) -> Bool {
+        var maybeMsg: UpdateWidgets?
+        
+        let group = DispatchGroup()
+        group.enter()
+        context.rpc.invoke(onBind, args: config) { resultData in
+            maybeMsg = UpdateWidgets(data: resultData)
+            group.leave()
+        }
+        _ = group.wait(timeout: DispatchTime.now() + DispatchTimeInterval.milliseconds(50))
+        
+        guard let updateMsg = maybeMsg else {
+            return false
         }
 
-        return item
+        for update in updateMsg.updates {
+            guard let widget = context.viewRegistry.viewWithTag(update.tag) else {
+                continue
+            }
+            updateWidget(old: widget, new: update.widget, context: context)
+        }
+        
+        return true
+    }
+    
+    @MainActor
+    private func create(_ item: PolyListViewItem, with config: RenderItemConfig) -> Bool {
+        var itemMsg: ListViewItem?
+        
+        let group = DispatchGroup()
+        group.enter()
+        context.rpc.invoke(onCreate, args: config) { resultData in
+            itemMsg = ListViewItem(data: resultData)
+            group.leave()
+        }
+        _ = group.wait(timeout: DispatchTime.now() + DispatchTimeInterval.milliseconds(50))
+        
+        guard let itemMsg else {
+            return false
+        }
+        
+        item.tag = itemMsg.itemTag
+        item.itemView = makeWidget(with: itemMsg.widget, parent: item.view, context: context)
+        
+        return true
     }
 }
 
@@ -64,6 +108,7 @@ class PolyListViewItem: NSCollectionViewItem {
 
     private(set) var isReused = false
     
+    var tag: Int32? = nil
     var itemView: NSView? = nil
     
     override func loadView() {
@@ -76,10 +121,12 @@ class PolyListViewItem: NSCollectionViewItem {
 }
 
 class PolyListViewDelegate: NSObject, NSCollectionViewDelegateFlowLayout {
+    var itemHeight: Float = 0.0
+    
     func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {}
     
     func collectionView(_ collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> NSSize {
-        return NSSize(width: collectionView.bounds.width, height: 40)
+        return NSSize(width: collectionView.bounds.width, height: CGFloat(itemHeight))
     }
 }
 
@@ -94,9 +141,10 @@ class PolyListView: NSScrollView {
         
         let layout = NSCollectionViewFlowLayout()
         
-        let dataSource = ListViewDataSource(context, renderItem: message.renderItem, sections: message.sectionCounts)
+        let dataSource = ListViewDataSource(context, onCreate: message.onCreate, onBind: message.onBind, sections: message.sections)
         let delegate = PolyListViewDelegate()
-        
+        delegate.itemHeight = Float(message.itemHeight)
+
         self.dataSource = dataSource
         self.collectionViewDelegate = delegate
 
@@ -126,6 +174,8 @@ func makeListView<Parent: NSView>(with message: ListView, parent: Parent, contex
     let listView = PolyListView(context, message)
 
     commit(listView, parent)
+    
+    listView.translatesAutoresizingMaskIntoConstraints = false
     
     if message.width != minContent {
         if message.width == fillParent {

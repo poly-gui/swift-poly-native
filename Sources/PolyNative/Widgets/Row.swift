@@ -74,3 +74,19 @@ func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: Applica
     
     return stackView
 }
+
+@MainActor
+func updateRow(current stackView: NSStackView, new config: Row) {
+    switch config.verticalAlignment {
+    case .center:
+        stackView.alignment = .centerY
+    case .bottom:
+        stackView.alignment = .bottom
+    case .start:
+        stackView.alignment = .top
+    case .end:
+        stackView.alignment = .bottom
+    default:
+        break
+    }
+}

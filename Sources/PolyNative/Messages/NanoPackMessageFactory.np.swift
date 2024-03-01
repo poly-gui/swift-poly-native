@@ -13,6 +13,7 @@ func makeNanoPackMessage(from data: Data) -> NanoPackMessage? {
     case 841129444: return TextField(data: data)
     case 1006836449: return Row(data: data)
     case 1016534798: return UpdateWidget(data: data)
+    case 1100735111: return ListViewItem(data: data)
     case 1676374721: return Widget(data: data)
     case 1768749598: return OnValueChanged(data: data)
     case 1855640887: return Center(data: data)

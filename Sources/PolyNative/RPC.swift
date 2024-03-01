@@ -15,21 +15,21 @@ class RPC {
     init(through channel: MessageChannel) {
         self.channel = channel
     }
-    
+
     func reply(to replyHandle: Int32, data: Data) {
-        guard let cb = pendingReplies[replyHandle] else {
+        guard let cb = pendingReplies.removeValue(forKey: replyHandle) else {
             return
         }
         cb(data)
     }
-    
+
     func invoke(callback: CallbackHandle, args: NanoPackMessage) {
         guard let argData = args.data() else {
             return
         }
         channel.send(message: InvokeCallback(handle: callback, args: argData, replyTo: nil))
     }
-    
+
     func invoke(_ callback: CallbackHandle, args: NanoPackMessage, onResult: @escaping (Data) -> Void) {
         guard let argData = args.data() else {
             return
@@ -42,7 +42,7 @@ class RPC {
     private func generateReplyHandle() -> Int32 {
         var id: Int32
         repeat {
-            id = Int32.random(in: 0...Int32.max)
+            id = Int32.random(in: 0 ... Int32.max)
         } while pendingReplies[id] != nil
         return id
     }

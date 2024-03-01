@@ -14,12 +14,14 @@ class StandardIOMessageChannel: MessageChannel {
 
     var messages: AsyncStream<Data> {
         AsyncStream { continuation in
-            stdout.fileHandleForReading.readabilityHandler = { pipe in
-                let data = pipe.availableData
-                guard !data.isEmpty else {
-                    return
+            Task {
+                while (true) {
+                    let byteCount = stdout.fileHandleForReading.readData(ofLength: 4).withUnsafeBytes {
+                        $0.load(as: Int32.self).littleEndian
+                    }
+                    let messageData = stdout.fileHandleForReading.readData(ofLength: Int(byteCount))
+                    continuation.yield(messageData)
                 }
-                continuation.yield(data)
             }
         }
     }

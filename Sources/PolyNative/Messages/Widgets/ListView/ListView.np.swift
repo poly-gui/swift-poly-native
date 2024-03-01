@@ -10,19 +10,26 @@ class ListView: Widget {
 
   let width: Double
   let height: Double
-  let sectionCounts: [Int32]
-  let renderItem: Int32
+  let sections: [Int32]
+  let itemHeight: Double
+  let onCreate: Int32
+  let onBind: Int32
 
-  init(tag: Int32?, width: Double, height: Double, sectionCounts: [Int32], renderItem: Int32) {
+  init(
+    tag: Int32?, width: Double, height: Double, sections: [Int32], itemHeight: Double,
+    onCreate: Int32, onBind: Int32
+  ) {
     self.width = width
     self.height = height
-    self.sectionCounts = sectionCounts
-    self.renderItem = renderItem
+    self.sections = sections
+    self.itemHeight = itemHeight
+    self.onCreate = onCreate
+    self.onBind = onBind
     super.init(tag: tag)
   }
 
   required init?(data: Data) {
-    var ptr = data.startIndex + 24
+    var ptr = data.startIndex + 32
 
     var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
@@ -38,25 +45,33 @@ class ListView: Widget {
     let height: Double = data.read(at: ptr)
     ptr += 8
 
-    let sectionCountsByteSize = data.readSize(ofField: 3)
-    let sectionCountsItemCount = sectionCountsByteSize / 4
-    let sectionCounts = data[ptr..<ptr + sectionCountsByteSize].withUnsafeBytes {
+    let sectionsByteSize = data.readSize(ofField: 3)
+    let sectionsItemCount = sectionsByteSize / 4
+    let sections = data[ptr..<ptr + sectionsByteSize].withUnsafeBytes {
       [Int32]($0.bindMemory(to: Int32.self).lazy.map { $0.littleEndian })
     }
-    ptr += sectionCountsByteSize
+    ptr += sectionsByteSize
 
-    let renderItem: Int32 = data.read(at: ptr)
+    let itemHeight: Double = data.read(at: ptr)
+    ptr += 8
+
+    let onCreate: Int32 = data.read(at: ptr)
+    ptr += 4
+
+    let onBind: Int32 = data.read(at: ptr)
     ptr += 4
 
     self.width = width
     self.height = height
-    self.sectionCounts = sectionCounts
-    self.renderItem = renderItem
+    self.sections = sections
+    self.itemHeight = itemHeight
+    self.onCreate = onCreate
+    self.onBind = onBind
     super.init(tag: tag)
   }
 
   required init?(data: Data, bytesRead: inout Int) {
-    var ptr = data.startIndex + 24
+    var ptr = data.startIndex + 32
 
     var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
@@ -72,20 +87,28 @@ class ListView: Widget {
     let height: Double = data.read(at: ptr)
     ptr += 8
 
-    let sectionCountsByteSize = data.readSize(ofField: 3)
-    let sectionCountsItemCount = sectionCountsByteSize / 4
-    let sectionCounts = data[ptr..<ptr + sectionCountsByteSize].withUnsafeBytes {
+    let sectionsByteSize = data.readSize(ofField: 3)
+    let sectionsItemCount = sectionsByteSize / 4
+    let sections = data[ptr..<ptr + sectionsByteSize].withUnsafeBytes {
       [Int32]($0.bindMemory(to: Int32.self).lazy.map { $0.littleEndian })
     }
-    ptr += sectionCountsByteSize
+    ptr += sectionsByteSize
 
-    let renderItem: Int32 = data.read(at: ptr)
+    let itemHeight: Double = data.read(at: ptr)
+    ptr += 8
+
+    let onCreate: Int32 = data.read(at: ptr)
+    ptr += 4
+
+    let onBind: Int32 = data.read(at: ptr)
     ptr += 4
 
     self.width = width
     self.height = height
-    self.sectionCounts = sectionCounts
-    self.renderItem = renderItem
+    self.sections = sections
+    self.itemHeight = itemHeight
+    self.onCreate = onCreate
+    self.onBind = onBind
     super.init(tag: tag)
 
     bytesRead = ptr - data.startIndex
@@ -95,10 +118,10 @@ class ListView: Widget {
     let offset = 0
 
     var data = Data()
-    data.reserveCapacity(24)
+    data.reserveCapacity(32)
 
     data.append(typeID: TypeID(ListView_typeID))
-    data.append([0], count: 5 * 4)
+    data.append([0], count: 7 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0, offset: offset)
@@ -113,13 +136,19 @@ class ListView: Widget {
     data.write(size: 8, ofField: 2, offset: offset)
     data.append(double: height)
 
-    data.write(size: sectionCounts.count * 4, ofField: 3, offset: offset)
-    for i in sectionCounts {
+    data.write(size: sections.count * 4, ofField: 3, offset: offset)
+    for i in sections {
       data.append(int: i)
     }
 
-    data.write(size: 4, ofField: 4, offset: offset)
-    data.append(int: renderItem)
+    data.write(size: 8, ofField: 4, offset: offset)
+    data.append(double: itemHeight)
+
+    data.write(size: 4, ofField: 5, offset: offset)
+    data.append(int: onCreate)
+
+    data.write(size: 4, ofField: 6, offset: offset)
+    data.append(int: onBind)
 
     return data
   }
@@ -128,11 +157,11 @@ class ListView: Widget {
     let offset = 4
 
     var data = Data()
-    data.reserveCapacity(24 + 4)
+    data.reserveCapacity(32 + 4)
 
     data.append(int: Int32(0))
     data.append(typeID: TypeID(ListView_typeID))
-    data.append([0], count: 5 * 4)
+    data.append([0], count: 7 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0, offset: offset)
@@ -147,13 +176,19 @@ class ListView: Widget {
     data.write(size: 8, ofField: 2, offset: offset)
     data.append(double: height)
 
-    data.write(size: sectionCounts.count * 4, ofField: 3, offset: offset)
-    for i in sectionCounts {
+    data.write(size: sections.count * 4, ofField: 3, offset: offset)
+    for i in sections {
       data.append(int: i)
     }
 
-    data.write(size: 4, ofField: 4, offset: offset)
-    data.append(int: renderItem)
+    data.write(size: 8, ofField: 4, offset: offset)
+    data.append(double: itemHeight)
+
+    data.write(size: 4, ofField: 5, offset: offset)
+    data.append(int: onCreate)
+
+    data.write(size: 4, ofField: 6, offset: offset)
+    data.append(int: onBind)
 
     data.write(size: data.count, at: 0)
 
