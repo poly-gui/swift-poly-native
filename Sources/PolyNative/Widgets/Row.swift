@@ -57,6 +57,8 @@ func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: Applica
     
     commit(stackView, parent)
     
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    
     if message.width != minContent {
         if message.width == fillParent {
             stackView.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true

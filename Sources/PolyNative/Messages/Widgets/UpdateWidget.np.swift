@@ -10,14 +10,16 @@ class UpdateWidget: NanoPackMessage {
 
   let tag: Int32
   let widget: Widget
+  let args: Data?
 
-  init(tag: Int32, widget: Widget) {
+  init(tag: Int32, widget: Widget, args: Data?) {
     self.tag = tag
     self.widget = widget
+    self.args = args
   }
 
   required init?(data: Data) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 16
 
     let tag: Int32 = data.read(at: ptr)
     ptr += 4
@@ -28,12 +30,22 @@ class UpdateWidget: NanoPackMessage {
     }
     ptr += widgetByteSize
 
+    var args: Data?
+    if data.readSize(ofField: 2) < 0 {
+      args = nil
+    } else {
+      let argsByteSize = data.readSize(ofField: 2)
+      args = data[ptr..<ptr + argsByteSize]
+      ptr += argsByteSize
+    }
+
     self.tag = tag
     self.widget = widget
+    self.args = args
   }
 
   required init?(data: Data, bytesRead: inout Int) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 16
 
     let tag: Int32 = data.read(at: ptr)
     ptr += 4
@@ -44,8 +56,18 @@ class UpdateWidget: NanoPackMessage {
     }
     ptr += widgetByteSize
 
+    var args: Data?
+    if data.readSize(ofField: 2) < 0 {
+      args = nil
+    } else {
+      let argsByteSize = data.readSize(ofField: 2)
+      args = data[ptr..<ptr + argsByteSize]
+      ptr += argsByteSize
+    }
+
     self.tag = tag
     self.widget = widget
+    self.args = args
 
     bytesRead = ptr - data.startIndex
   }
@@ -54,10 +76,10 @@ class UpdateWidget: NanoPackMessage {
     let offset = 0
 
     var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(16)
 
     data.append(typeID: TypeID(UpdateWidget_typeID))
-    data.append([0], count: 2 * 4)
+    data.append([0], count: 3 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: tag)
@@ -67,6 +89,13 @@ class UpdateWidget: NanoPackMessage {
     }
     data.write(size: widgetData.count, ofField: 1, offset: offset)
     data.append(widgetData)
+
+    if let args = self.args {
+      data.write(size: args.count, ofField: 2, offset: offset)
+      data.append(args)
+    } else {
+      data.write(size: -1, ofField: 2, offset: offset)
+    }
 
     return data
   }
@@ -75,11 +104,11 @@ class UpdateWidget: NanoPackMessage {
     let offset = 4
 
     var data = Data()
-    data.reserveCapacity(12 + 4)
+    data.reserveCapacity(16 + 4)
 
     data.append(int: Int32(0))
     data.append(typeID: TypeID(UpdateWidget_typeID))
-    data.append([0], count: 2 * 4)
+    data.append([0], count: 3 * 4)
 
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: tag)
@@ -89,6 +118,13 @@ class UpdateWidget: NanoPackMessage {
     }
     data.write(size: widgetData.count, ofField: 1, offset: offset)
     data.append(widgetData)
+
+    if let args = self.args {
+      data.write(size: args.count, ofField: 2, offset: offset)
+      data.append(args)
+    } else {
+      data.write(size: -1, ofField: 2, offset: offset)
+    }
 
     data.write(size: data.count, at: 0)
 

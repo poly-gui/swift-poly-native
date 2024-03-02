@@ -35,7 +35,7 @@ class PolyTextField: NSTextField, NSTextFieldDelegate {
         let valueChanged = ValueChangedCallback(handle: message.onValueChanged, context: context)
         context.callbackRegistry.register(valueChanged)
         
-        self.init(string: "initial value")
+        self.init(string: "")
         self.placeholderString = message.placeholder
         self.context = context
         self.valueChanged = valueChanged

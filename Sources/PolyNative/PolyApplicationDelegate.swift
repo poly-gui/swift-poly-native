@@ -49,7 +49,10 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                     #endif
                     continue
                 }
-                await self.handleMessage(message)
+                
+                Task {
+                    await self.handleMessage(message)
+                }
             }
         }
     }
@@ -115,6 +118,6 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         else {
             return
         }
-        updateWidget(old: view, new: message.widget, context: context)
+        updateWidget(old: view, new: message.widget, context: context, args: message.args)
     }
 }

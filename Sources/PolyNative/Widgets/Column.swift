@@ -58,6 +58,8 @@ func makeColumn<Parent: NSView>(with message: Column, parent: Parent, context: A
 
     commit(stackView, parent)
 
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+
     if message.width != minContent {
         if message.width == fillParent {
             stackView.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true

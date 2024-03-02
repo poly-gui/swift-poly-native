@@ -18,12 +18,16 @@ func makeNanoPackMessage(from data: Data) -> NanoPackMessage? {
     case 1768749598: return OnValueChanged(data: data)
     case 1855640887: return Center(data: data)
     case 2013877267: return InvokeCallback(data: data)
+    case 2077451345: return ListViewInsertOperation(data: data)
     case 2164488861: return ListView(data: data)
+    case 2223513129: return ListViewDeleteOperation(data: data)
     case 2313387354: return CreateWidget(data: data)
     case 2415007766: return Column(data: data)
     case 3495336243: return Text(data: data)
+    case 3516816492: return ListViewOperation(data: data)
     case 3533765426: return CreateWindow(data: data)
     case 3591753548: return RenderItemConfig(data: data)
+    case 3604546751: return ListViewBatchOperations(data: data)
     default: return nil
     }
 }

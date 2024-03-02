@@ -9,7 +9,8 @@ import AppKit
 import Foundation
 
 class ListViewDataSource: NSObject, NSCollectionViewDataSource {
-    private let sections: [Int32]
+    var sections: [Int32]
+    
     private let onCreate: CallbackHandle
     private let onBind: CallbackHandle
     private let context: ApplicationContext
@@ -82,22 +83,25 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
     
     @MainActor
     private func create(_ item: PolyListViewItem, with config: RenderItemConfig) -> Bool {
-        var itemMsg: ListViewItem?
+        var maybeMsg: ListViewItem?
         
         let group = DispatchGroup()
         group.enter()
         context.rpc.invoke(onCreate, args: config) { resultData in
-            itemMsg = ListViewItem(data: resultData)
+            maybeMsg = ListViewItem(data: resultData)
+            print("maybe msg \(maybeMsg)")
             group.leave()
         }
-        _ = group.wait(timeout: DispatchTime.now() + DispatchTimeInterval.milliseconds(50))
+        group.wait()
         
-        guard let itemMsg else {
+        guard let itemMsg = maybeMsg else {
             return false
         }
         
         item.tag = itemMsg.itemTag
         item.itemView = makeWidget(with: itemMsg.widget, parent: item.view, context: context)
+        
+        print("create ok")
         
         return true
     }
@@ -131,8 +135,10 @@ class PolyListViewDelegate: NSObject, NSCollectionViewDelegateFlowLayout {
 }
 
 class PolyListView: NSScrollView {
-    private var dataSource: ListViewDataSource? = nil
-    private var collectionViewDelegate: PolyListViewDelegate? = nil
+    private(set) var dataSource: ListViewDataSource? = nil
+    private(set) var collectionViewDelegate: PolyListViewDelegate? = nil
+    
+    private var collectionView: NSCollectionView? = nil
     
     convenience init(_ context: ApplicationContext, _ message: ListView) {
         self.init()
@@ -153,6 +159,7 @@ class PolyListView: NSScrollView {
         collectionView.collectionViewLayout = layout
         collectionView.register(PolyListViewItem.self, forItemWithIdentifier: PolyListViewItem.identifier)
         
+        self.collectionView = collectionView
         documentView = collectionView
     }
     
@@ -160,6 +167,39 @@ class PolyListView: NSScrollView {
         super.resizeSubviews(withOldSize: oldSize)
         if oldSize.width != bounds.width, let collectionView = documentView as? NSCollectionView {
             collectionView.collectionViewLayout?.invalidateLayout()
+        }
+    }
+    
+    func reloadData() {
+        collectionView?.reloadData()
+    }
+    
+    func performBatchUpdates(_ operations: ListViewBatchOperations) {
+        guard let collectionView = collectionView else {
+            return
+        }
+        
+        collectionView.performBatchUpdates {
+            for operation in operations.operations {
+                switch operation {
+                case let operation as ListViewDeleteOperation:
+                    var paths: Set<IndexPath> = []
+                    for i in operation.deleteAt {
+                        paths.insert(IndexPath(item: Int(i), section: 0))
+                    }
+                    collectionView.deleteItems(at: paths)
+                    
+                case let operation as ListViewInsertOperation:
+                    var paths: Set<IndexPath> = []
+                    for i in operation.insertAt {
+                        paths.insert(IndexPath(item: Int(i), section: 0))
+                    }
+                    collectionView.insertItems(at: paths)
+                    
+                default:
+                    break
+                }
+            }
         }
     }
 }
@@ -195,4 +235,14 @@ func makeListView<Parent: NSView>(with message: ListView, parent: Parent, contex
     }
     
     return listView
+}
+
+@MainActor
+func updateListView(current listView: PolyListView, new config: ListView, operations: ListViewBatchOperations) {
+    listView.dataSource?.sections = config.sections
+    if operations.operations.isEmpty {
+        listView.reloadData()
+    } else {
+        listView.performBatchUpdates(operations)
+    }
 }
