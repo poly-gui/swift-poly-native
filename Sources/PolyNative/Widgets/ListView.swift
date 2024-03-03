@@ -9,13 +9,13 @@ import AppKit
 import Foundation
 
 class ListViewDataSource: NSObject, NSCollectionViewDataSource {
-    var sections: [Int32]
+    var sections: [UInt32]
     
     private let onCreate: CallbackHandle
     private let onBind: CallbackHandle
     private let context: ApplicationContext
     
-    init(_ context: ApplicationContext, onCreate: CallbackHandle, onBind: CallbackHandle, sections: [Int32]) {
+    init(_ context: ApplicationContext, onCreate: CallbackHandle, onBind: CallbackHandle, sections: [UInt32]) {
         self.context = context
         self.sections = sections
         self.onCreate = onCreate
@@ -89,7 +89,6 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
         group.enter()
         context.rpc.invoke(onCreate, args: config) { resultData in
             maybeMsg = ListViewItem(data: resultData)
-            print("maybe msg \(maybeMsg)")
             group.leave()
         }
         group.wait()
@@ -100,9 +99,7 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
         
         item.tag = itemMsg.itemTag
         item.itemView = makeWidget(with: itemMsg.widget, parent: item.view, context: context)
-        
-        print("create ok")
-        
+
         return true
     }
 }
