@@ -82,7 +82,6 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
 
         default:
             NSLog("tf is message \(message.typeID)")
-            break
         }
     }
     

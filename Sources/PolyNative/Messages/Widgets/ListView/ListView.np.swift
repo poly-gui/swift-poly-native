@@ -10,13 +10,13 @@ class ListView: Widget {
 
   let width: Double
   let height: Double
-  let sections: [Int32]
+  let sections: [UInt32]
   let itemHeight: Double
   let onCreate: Int32
   let onBind: Int32
 
   init(
-    tag: Int32?, width: Double, height: Double, sections: [Int32], itemHeight: Double,
+    tag: Int32?, width: Double, height: Double, sections: [UInt32], itemHeight: Double,
     onCreate: Int32, onBind: Int32
   ) {
     self.width = width
@@ -48,7 +48,7 @@ class ListView: Widget {
     let sectionsByteSize = data.readSize(ofField: 3)
     let sectionsItemCount = sectionsByteSize / 4
     let sections = data[ptr..<ptr + sectionsByteSize].withUnsafeBytes {
-      [Int32]($0.bindMemory(to: Int32.self).lazy.map { $0.littleEndian })
+      [UInt32]($0.bindMemory(to: UInt32.self).lazy.map { $0.littleEndian })
     }
     ptr += sectionsByteSize
 
@@ -90,7 +90,7 @@ class ListView: Widget {
     let sectionsByteSize = data.readSize(ofField: 3)
     let sectionsItemCount = sectionsByteSize / 4
     let sections = data[ptr..<ptr + sectionsByteSize].withUnsafeBytes {
-      [Int32]($0.bindMemory(to: Int32.self).lazy.map { $0.littleEndian })
+      [UInt32]($0.bindMemory(to: UInt32.self).lazy.map { $0.littleEndian })
     }
     ptr += sectionsByteSize
 
