@@ -8,6 +8,8 @@ let ClickEvent_typeID: TypeID = 837_166_865
 class ClickEvent: NanoPackMessage {
   var typeID: TypeID { return 837_166_865 }
 
+  var headerSize: Int { return 8 }
+
   let timestamp: Int32
 
   init(timestamp: Int32) {
@@ -34,11 +36,10 @@ class ClickEvent: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(8)
+    data.reserveCapacity(offset + 8)
 
     data.append(typeID: TypeID(ClickEvent_typeID))
     data.append([0], count: 1 * 4)
@@ -46,24 +47,12 @@ class ClickEvent: NanoPackMessage {
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: timestamp)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(8 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(ClickEvent_typeID))
-    data.append([0], count: 1 * 4)
-
-    data.write(size: 4, ofField: 0, offset: offset)
-    data.append(int: timestamp)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

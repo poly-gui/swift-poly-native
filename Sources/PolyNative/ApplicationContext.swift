@@ -8,15 +8,13 @@
 import Foundation
 
 class ApplicationContext {
-    let messageChannel: MessageChannel
     let callbackRegistry: CallbackRegistry
     let viewRegistry: ViewRegistry
-    let rpc: RPC
+    let portableLayer: PortableLayer
 
-    init(messageChannel: MessageChannel) {
-        self.messageChannel = messageChannel
+    init(portableLayer: PortableLayer) {
         self.callbackRegistry = CallbackRegistry()
         self.viewRegistry = ViewRegistry()
-        self.rpc = RPC(through: messageChannel)
+        self.portableLayer = portableLayer
     }
 }

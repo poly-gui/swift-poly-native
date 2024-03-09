@@ -42,14 +42,8 @@ class OnClickCallback: Callback {
         guard let event = NSApp.currentEvent else {
             return
         }
-
         let clickEvent = ClickEvent(timestamp: Int32(event.timestamp))
-        guard let clickEventData = clickEvent.data() else {
-            return
-        }
-
-        let invokeCallback = InvokeCallback(handle: handle, args: clickEventData, replyTo: nil)
-        self.context.messageChannel.send(message: invokeCallback)
+        self.context.portableLayer.invoke(self.handle, args: clickEvent)
     }
 }
 

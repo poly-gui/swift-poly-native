@@ -35,9 +35,9 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
             return NSCollectionViewItem()
         }
         
-        let renderItemConfig = RenderItemConfig(
-            sectionIndex: Int32(indexPath.section),
-            itemIndex: Int32(indexPath.item),
+        let renderItemConfig = ListViewItemConfig(
+            sectionIndex: UInt32(indexPath.section),
+            itemIndex: UInt32(indexPath.item),
             itemTag: item.tag
         )
         
@@ -56,12 +56,12 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
     }
     
     @MainActor
-    private func rebind(_ item: PolyListViewItem, with config: RenderItemConfig) -> Bool {
+    private func rebind(_ item: PolyListViewItem, with config: ListViewItemConfig) -> Bool {
         var maybeMsg: UpdateWidgets?
         
         let group = DispatchGroup()
         group.enter()
-        context.rpc.invoke(onBind, args: config) { resultData in
+        context.portableLayer.invoke(onBind, args: config) { resultData in
             maybeMsg = UpdateWidgets(data: resultData)
             group.leave()
         }
@@ -82,12 +82,12 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
     }
     
     @MainActor
-    private func create(_ item: PolyListViewItem, with config: RenderItemConfig) -> Bool {
+    private func create(_ item: PolyListViewItem, with config: ListViewItemConfig) -> Bool {
         var maybeMsg: ListViewItem?
         
         let group = DispatchGroup()
         group.enter()
-        context.rpc.invoke(onCreate, args: config) { resultData in
+        context.portableLayer.invoke(onCreate, args: config) { resultData in
             maybeMsg = ListViewItem(data: resultData)
             group.leave()
         }
@@ -109,7 +109,7 @@ class PolyListViewItem: NSCollectionViewItem {
 
     private(set) var isReused = false
     
-    var tag: Int32? = nil
+    var tag: UInt32? = nil
     var itemView: NSView? = nil
     
     override func loadView() {

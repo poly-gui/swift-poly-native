@@ -8,6 +8,8 @@ let InvokeCallback_typeID: TypeID = 2_013_877_267
 class InvokeCallback: NanoPackMessage {
   var typeID: TypeID { return 2_013_877_267 }
 
+  var headerSize: Int { return 16 }
+
   let handle: Int32
   let args: Data
   let replyTo: Int32?
@@ -66,11 +68,10 @@ class InvokeCallback: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(16)
+    data.reserveCapacity(offset + 16)
 
     data.append(typeID: TypeID(InvokeCallback_typeID))
     data.append([0], count: 3 * 4)
@@ -88,34 +89,12 @@ class InvokeCallback: NanoPackMessage {
       data.write(size: -1, ofField: 2, offset: offset)
     }
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(16 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(InvokeCallback_typeID))
-    data.append([0], count: 3 * 4)
-
-    data.write(size: 4, ofField: 0, offset: offset)
-    data.append(int: handle)
-
-    data.write(size: args.count, ofField: 1, offset: offset)
-    data.append(args)
-
-    if let replyTo = self.replyTo {
-      data.write(size: 4, ofField: 2, offset: offset)
-      data.append(int: replyTo)
-    } else {
-      data.write(size: -1, ofField: 2, offset: offset)
-    }
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

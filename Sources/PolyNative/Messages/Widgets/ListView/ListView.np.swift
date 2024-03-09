@@ -8,6 +8,8 @@ let ListView_typeID: TypeID = 2_164_488_861
 class ListView: Widget {
   override var typeID: TypeID { return 2_164_488_861 }
 
+  override var headerSize: Int { return 32 }
+
   let width: Double
   let height: Double
   let sections: [UInt32]
@@ -114,11 +116,10 @@ class ListView: Widget {
     bytesRead = ptr - data.startIndex
   }
 
-  override func data() -> Data? {
-    let offset = 0
+  override func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(32)
+    data.reserveCapacity(offset + 32)
 
     data.append(typeID: TypeID(ListView_typeID))
     data.append([0], count: 7 * 4)
@@ -150,48 +151,12 @@ class ListView: Widget {
     data.write(size: 4, ofField: 6, offset: offset)
     data.append(int: onBind)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  override func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(32 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(ListView_typeID))
-    data.append([0], count: 7 * 4)
-
-    if let tag = self.tag {
-      data.write(size: 4, ofField: 0, offset: offset)
-      data.append(int: tag)
-    } else {
-      data.write(size: -1, ofField: 0, offset: offset)
-    }
-
-    data.write(size: 8, ofField: 1, offset: offset)
-    data.append(double: width)
-
-    data.write(size: 8, ofField: 2, offset: offset)
-    data.append(double: height)
-
-    data.write(size: sections.count * 4, ofField: 3, offset: offset)
-    for i in sections {
-      data.append(int: i)
-    }
-
-    data.write(size: 8, ofField: 4, offset: offset)
-    data.append(double: itemHeight)
-
-    data.write(size: 4, ofField: 5, offset: offset)
-    data.append(int: onCreate)
-
-    data.write(size: 4, ofField: 6, offset: offset)
-    data.append(int: onBind)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

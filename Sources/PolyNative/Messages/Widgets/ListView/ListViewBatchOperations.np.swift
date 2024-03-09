@@ -8,6 +8,8 @@ let ListViewBatchOperations_typeID: TypeID = 3_604_546_751
 class ListViewBatchOperations: NanoPackMessage {
   var typeID: TypeID { return 3_604_546_751 }
 
+  var headerSize: Int { return 8 }
+
   let operations: [ListViewOperation]
 
   init(operations: [ListViewOperation]) {
@@ -54,11 +56,10 @@ class ListViewBatchOperations: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(8)
+    data.reserveCapacity(offset + 8)
 
     data.append(typeID: TypeID(ListViewBatchOperations_typeID))
     data.append([0], count: 1 * 4)
@@ -66,40 +67,17 @@ class ListViewBatchOperations: NanoPackMessage {
     data.append(size: operations.count)
     var operationsByteSize: Size = 4
     for i in operations {
-      guard let iData = i.data() else {
-        return nil
-      }
-      data.append(iData)
-      operationsByteSize += iData.count
+      let iByteSize = i.write(to: &data, offset: data.count)
+      operationsByteSize += iByteSize
     }
     data.write(size: operationsByteSize, ofField: 0, offset: offset)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(8 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(ListViewBatchOperations_typeID))
-    data.append([0], count: 1 * 4)
-
-    data.append(size: operations.count)
-    var operationsByteSize: Size = 4
-    for i in operations {
-      guard let iData = i.data() else {
-        return nil
-      }
-      data.append(iData)
-      operationsByteSize += iData.count
-    }
-    data.write(size: operationsByteSize, ofField: 0, offset: offset)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

@@ -8,6 +8,8 @@ let CreateWidget_typeID: TypeID = 2_313_387_354
 class CreateWidget: NanoPackMessage {
   var typeID: TypeID { return 2_313_387_354 }
 
+  var headerSize: Int { return 12 }
+
   let widget: Widget
   let windowTag: String
 
@@ -56,48 +58,26 @@ class CreateWidget: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(offset + 12)
 
     data.append(typeID: TypeID(CreateWidget_typeID))
     data.append([0], count: 2 * 4)
 
-    guard let widgetData = widget.data() else {
-      return nil
-    }
-    data.write(size: widgetData.count, ofField: 0, offset: offset)
-    data.append(widgetData)
+    let widgetByteSize = widget.write(to: &data, offset: data.count)
+    data.write(size: widgetByteSize, ofField: 0, offset: offset)
 
     data.write(size: windowTag.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
     data.append(string: windowTag)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(12 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(CreateWidget_typeID))
-    data.append([0], count: 2 * 4)
-
-    guard let widgetData = widget.data() else {
-      return nil
-    }
-    data.write(size: widgetData.count, ofField: 0, offset: offset)
-    data.append(widgetData)
-
-    data.write(size: windowTag.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
-    data.append(string: windowTag)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

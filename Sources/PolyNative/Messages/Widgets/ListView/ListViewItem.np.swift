@@ -8,10 +8,12 @@ let ListViewItem_typeID: TypeID = 1_100_735_111
 class ListViewItem: NanoPackMessage {
   var typeID: TypeID { return 1_100_735_111 }
 
-  let itemTag: Int32
+  var headerSize: Int { return 12 }
+
+  let itemTag: UInt32
   let widget: Widget
 
-  init(itemTag: Int32, widget: Widget) {
+  init(itemTag: UInt32, widget: Widget) {
     self.itemTag = itemTag
     self.widget = widget
   }
@@ -19,7 +21,7 @@ class ListViewItem: NanoPackMessage {
   required init?(data: Data) {
     var ptr = data.startIndex + 12
 
-    let itemTag: Int32 = data.read(at: ptr)
+    let itemTag: UInt32 = data.read(at: ptr)
     ptr += 4
 
     let widgetByteSize = data.readSize(ofField: 1)
@@ -35,7 +37,7 @@ class ListViewItem: NanoPackMessage {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 12
 
-    let itemTag: Int32 = data.read(at: ptr)
+    let itemTag: UInt32 = data.read(at: ptr)
     ptr += 4
 
     let widgetByteSize = data.readSize(ofField: 1)
@@ -50,11 +52,10 @@ class ListViewItem: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(offset + 12)
 
     data.append(typeID: TypeID(ListViewItem_typeID))
     data.append([0], count: 2 * 4)
@@ -62,36 +63,15 @@ class ListViewItem: NanoPackMessage {
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: itemTag)
 
-    guard let widgetData = widget.data() else {
-      return nil
-    }
-    data.write(size: widgetData.count, ofField: 1, offset: offset)
-    data.append(widgetData)
+    let widgetByteSize = widget.write(to: &data, offset: data.count)
+    data.write(size: widgetByteSize, ofField: 1, offset: offset)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(12 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(ListViewItem_typeID))
-    data.append([0], count: 2 * 4)
-
-    data.write(size: 4, ofField: 0, offset: offset)
-    data.append(int: itemTag)
-
-    guard let widgetData = widget.data() else {
-      return nil
-    }
-    data.write(size: widgetData.count, ofField: 1, offset: offset)
-    data.append(widgetData)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

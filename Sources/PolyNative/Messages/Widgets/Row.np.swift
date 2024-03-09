@@ -8,6 +8,8 @@ let Row_typeID: TypeID = 1_006_836_449
 class Row: Widget {
   override var typeID: TypeID { return 1_006_836_449 }
 
+  override var headerSize: Int { return 28 }
+
   let width: Double
   let height: Double
   let horizontalAlignment: Alignment
@@ -128,11 +130,10 @@ class Row: Widget {
     bytesRead = ptr - data.startIndex
   }
 
-  override func data() -> Data? {
-    let offset = 0
+  override func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(28)
+    data.reserveCapacity(offset + 28)
 
     data.append(typeID: TypeID(Row_typeID))
     data.append([0], count: 6 * 4)
@@ -159,59 +160,17 @@ class Row: Widget {
     data.append(size: children.count)
     var childrenByteSize: Size = 4
     for i in children {
-      guard let iData = i.data() else {
-        return nil
-      }
-      data.append(iData)
-      childrenByteSize += iData.count
+      let iByteSize = i.write(to: &data, offset: data.count)
+      childrenByteSize += iByteSize
     }
     data.write(size: childrenByteSize, ofField: 5, offset: offset)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  override func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(28 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(Row_typeID))
-    data.append([0], count: 6 * 4)
-
-    if let tag = self.tag {
-      data.write(size: 4, ofField: 0, offset: offset)
-      data.append(int: tag)
-    } else {
-      data.write(size: -1, ofField: 0, offset: offset)
-    }
-
-    data.write(size: 8, ofField: 1, offset: offset)
-    data.append(double: width)
-
-    data.write(size: 8, ofField: 2, offset: offset)
-    data.append(double: height)
-
-    data.write(size: 1, ofField: 3, offset: offset)
-    data.append(int: horizontalAlignment.rawValue)
-
-    data.write(size: 1, ofField: 4, offset: offset)
-    data.append(int: verticalAlignment.rawValue)
-
-    data.append(size: children.count)
-    var childrenByteSize: Size = 4
-    for i in children {
-      guard let iData = i.data() else {
-        return nil
-      }
-      data.append(iData)
-      childrenByteSize += iData.count
-    }
-    data.write(size: childrenByteSize, ofField: 5, offset: offset)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

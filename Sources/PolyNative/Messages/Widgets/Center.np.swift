@@ -8,6 +8,8 @@ let Center_typeID: TypeID = 1_855_640_887
 class Center: Widget {
   override var typeID: TypeID { return 1_855_640_887 }
 
+  override var headerSize: Int { return 12 }
+
   let child: Widget
 
   init(tag: Int32?, child: Widget) {
@@ -59,11 +61,10 @@ class Center: Widget {
     bytesRead = ptr - data.startIndex
   }
 
-  override func data() -> Data? {
-    let offset = 0
+  override func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(offset + 12)
 
     data.append(typeID: TypeID(Center_typeID))
     data.append([0], count: 2 * 4)
@@ -75,40 +76,15 @@ class Center: Widget {
       data.write(size: -1, ofField: 0, offset: offset)
     }
 
-    guard let childData = child.data() else {
-      return nil
-    }
-    data.write(size: childData.count, ofField: 1, offset: offset)
-    data.append(childData)
+    let childByteSize = child.write(to: &data, offset: data.count)
+    data.write(size: childByteSize, ofField: 1, offset: offset)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  override func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(12 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(Center_typeID))
-    data.append([0], count: 2 * 4)
-
-    if let tag = self.tag {
-      data.write(size: 4, ofField: 0, offset: offset)
-      data.append(int: tag)
-    } else {
-      data.write(size: -1, ofField: 0, offset: offset)
-    }
-
-    guard let childData = child.data() else {
-      return nil
-    }
-    data.write(size: childData.count, ofField: 1, offset: offset)
-    data.append(childData)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

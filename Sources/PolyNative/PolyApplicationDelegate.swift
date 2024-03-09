@@ -15,45 +15,16 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private var applicationContext: ApplicationContext?
     
     open func applicationDidFinishLaunching(_ notification: Notification) {
-        guard let portableBinaryPath = Bundle.main.path(forResource: "bundle", ofType: nil) else {
-            return
-        }
-        
-        let portableLayerProcess = Process()
-        portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
-        
-        let messageChannel = StandardIOMessageChannel(process: portableLayerProcess)
-        listenToIncomingMessages(from: messageChannel)
+        let portableLayer = PortableLayerInChildProcess(messageHandler: handleMessage(_:))
         
         applicationContext = ApplicationContext(
-            messageChannel: messageChannel
+            portableLayer: portableLayer
         )
         
         do {
-            try portableLayerProcess.run()
+            try portableLayer.start()
         } catch let err {
             print("Unable to start portable layer process: \(String(describing: err))")
-        }
-    }
-    
-    private func listenToIncomingMessages(from channel: MessageChannel) {
-        Task {
-            for await messageData in channel.messages {
-                guard let message = makeNanoPackMessage(from: messageData) else {
-                    #if DEBUG
-                    if let log = String(data: messageData, encoding: .utf8) {
-                        NSLog("VERBOSE: \(log)")
-                    } else {
-                        NSLog("WARNING: failed to decode message received from portable layer")
-                    }
-                    #endif
-                    continue
-                }
-                
-                Task {
-                    await self.handleMessage(message)
-                }
-            }
         }
     }
     
@@ -75,10 +46,6 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
                     self.updateView(message: update)
                 }
             }
-
-        case ReplyFromCallback_typeID:
-            let msg = message as! ReplyFromCallback
-            applicationContext?.rpc.reply(to: msg.to, data: msg.args)
 
         default:
             NSLog("tf is message \(message.typeID)")

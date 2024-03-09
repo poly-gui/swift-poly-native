@@ -8,6 +8,8 @@ let ListViewInsertOperation_typeID: TypeID = 2_077_451_345
 class ListViewInsertOperation: ListViewOperation {
   override var typeID: TypeID { return 2_077_451_345 }
 
+  override var headerSize: Int { return 12 }
+
   let insertAt: [Int32]
 
   init(tag: Int32, insertAt: [Int32]) {
@@ -51,11 +53,10 @@ class ListViewInsertOperation: ListViewOperation {
     bytesRead = ptr - data.startIndex
   }
 
-  override func data() -> Data? {
-    let offset = 0
+  override func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(12)
+    data.reserveCapacity(offset + 12)
 
     data.append(typeID: TypeID(ListViewInsertOperation_typeID))
     data.append([0], count: 2 * 4)
@@ -68,29 +69,12 @@ class ListViewInsertOperation: ListViewOperation {
       data.append(int: i)
     }
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  override func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(12 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(ListViewInsertOperation_typeID))
-    data.append([0], count: 2 * 4)
-
-    data.write(size: 4, ofField: 0, offset: offset)
-    data.append(int: tag)
-
-    data.write(size: insertAt.count * 4, ofField: 1, offset: offset)
-    for i in insertAt {
-      data.append(int: i)
-    }
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

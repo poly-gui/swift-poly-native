@@ -8,6 +8,8 @@ let UpdateWidget_typeID: TypeID = 1_016_534_798
 class UpdateWidget: NanoPackMessage {
   var typeID: TypeID { return 1_016_534_798 }
 
+  var headerSize: Int { return 16 }
+
   let tag: Int32
   let widget: Widget
   let args: Data?
@@ -72,11 +74,10 @@ class UpdateWidget: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(16)
+    data.reserveCapacity(offset + 16)
 
     data.append(typeID: TypeID(UpdateWidget_typeID))
     data.append([0], count: 3 * 4)
@@ -84,11 +85,8 @@ class UpdateWidget: NanoPackMessage {
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: tag)
 
-    guard let widgetData = widget.data() else {
-      return nil
-    }
-    data.write(size: widgetData.count, ofField: 1, offset: offset)
-    data.append(widgetData)
+    let widgetByteSize = widget.write(to: &data, offset: data.count)
+    data.write(size: widgetByteSize, ofField: 1, offset: offset)
 
     if let args = self.args {
       data.write(size: args.count, ofField: 2, offset: offset)
@@ -97,37 +95,12 @@ class UpdateWidget: NanoPackMessage {
       data.write(size: -1, ofField: 2, offset: offset)
     }
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(16 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(UpdateWidget_typeID))
-    data.append([0], count: 3 * 4)
-
-    data.write(size: 4, ofField: 0, offset: offset)
-    data.append(int: tag)
-
-    guard let widgetData = widget.data() else {
-      return nil
-    }
-    data.write(size: widgetData.count, ofField: 1, offset: offset)
-    data.append(widgetData)
-
-    if let args = self.args {
-      data.write(size: args.count, ofField: 2, offset: offset)
-      data.append(args)
-    } else {
-      data.write(size: -1, ofField: 2, offset: offset)
-    }
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

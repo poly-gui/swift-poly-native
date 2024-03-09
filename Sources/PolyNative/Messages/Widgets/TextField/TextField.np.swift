@@ -8,6 +8,8 @@ let TextField_typeID: TypeID = 841_129_444
 class TextField: Widget {
   override var typeID: TypeID { return 841_129_444 }
 
+  override var headerSize: Int { return 20 }
+
   let placeholder: String?
   let value: String
   let onValueChanged: Int32
@@ -97,11 +99,10 @@ class TextField: Widget {
     bytesRead = ptr - data.startIndex
   }
 
-  override func data() -> Data? {
-    let offset = 0
+  override func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(20)
+    data.reserveCapacity(offset + 20)
 
     data.append(typeID: TypeID(TextField_typeID))
     data.append([0], count: 4 * 4)
@@ -126,41 +127,12 @@ class TextField: Widget {
     data.write(size: 4, ofField: 3, offset: offset)
     data.append(int: onValueChanged)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  override func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(20 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(TextField_typeID))
-    data.append([0], count: 4 * 4)
-
-    if let tag = self.tag {
-      data.write(size: 4, ofField: 0, offset: offset)
-      data.append(int: tag)
-    } else {
-      data.write(size: -1, ofField: 0, offset: offset)
-    }
-
-    if let placeholder = self.placeholder {
-      data.write(size: placeholder.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
-      data.append(string: placeholder)
-    } else {
-      data.write(size: -1, ofField: 1, offset: offset)
-    }
-
-    data.write(size: value.lengthOfBytes(using: .utf8), ofField: 2, offset: offset)
-    data.append(string: value)
-
-    data.write(size: 4, ofField: 3, offset: offset)
-    data.append(int: onValueChanged)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

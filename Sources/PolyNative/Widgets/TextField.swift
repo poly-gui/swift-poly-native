@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Kenneth Ng on 13/02/2024.
 //
@@ -10,14 +10,14 @@ import Foundation
 
 class PolyTextField: NSTextField, NSTextFieldDelegate {
     private var context: ApplicationContext?
-    
+
     private var valueChanged: ValueChangedCallback?
     var valueChangedHandle: CallbackHandle? {
         didSet {
             guard let context, oldValue != valueChangedHandle else {
                 return
             }
-            
+
             if let oldValue {
                 context.callbackRegistry.unregister(handle: oldValue)
                 if let valueChangedHandle {
@@ -30,11 +30,11 @@ class PolyTextField: NSTextField, NSTextFieldDelegate {
             }
         }
     }
-    
+
     convenience init(message: TextField, context: ApplicationContext) {
         let valueChanged = ValueChangedCallback(handle: message.onValueChanged, context: context)
         context.callbackRegistry.register(valueChanged)
-        
+
         self.init(string: "")
         self.placeholderString = message.placeholder
         self.context = context
@@ -42,10 +42,11 @@ class PolyTextField: NSTextField, NSTextFieldDelegate {
         self.valueChangedHandle = message.onValueChanged
         self.delegate = self
     }
-    
+
     func controlTextDidChange(_ obj: Notification) {
         guard let textField = obj.object as? NSTextField, textField == self,
-              let valueChanged else {
+              let valueChanged
+        else {
             return
         }
         valueChanged.call(newValue: textField.stringValue)
@@ -54,20 +55,17 @@ class PolyTextField: NSTextField, NSTextFieldDelegate {
 
 class ValueChangedCallback: Callback {
     let handle: Int32
-    
+
     private let context: ApplicationContext
-    
+
     init(handle: Int32, context: ApplicationContext) {
         self.handle = handle
         self.context = context
     }
-    
+
     func call(newValue: String) {
         let onValueChanged = OnValueChanged(newValue: newValue)
-        guard let argData = onValueChanged.data() else {
-            return
-        }
-        context.messageChannel.send(message: InvokeCallback(handle: handle, args: argData, replyTo: nil))
+        context.portableLayer.invoke(handle, args: onValueChanged)
     }
 }
 

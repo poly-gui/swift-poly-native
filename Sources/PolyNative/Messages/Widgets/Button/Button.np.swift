@@ -8,6 +8,8 @@ let Button_typeID: TypeID = 320_412_644
 class Button: Widget {
   override var typeID: TypeID { return 320_412_644 }
 
+  override var headerSize: Int { return 16 }
+
   let text: String
   let onClick: Int32
 
@@ -69,11 +71,10 @@ class Button: Widget {
     bytesRead = ptr - data.startIndex
   }
 
-  override func data() -> Data? {
-    let offset = 0
+  override func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(16)
+    data.reserveCapacity(offset + 16)
 
     data.append(typeID: TypeID(Button_typeID))
     data.append([0], count: 3 * 4)
@@ -91,34 +92,12 @@ class Button: Widget {
     data.write(size: 4, ofField: 2, offset: offset)
     data.append(int: onClick)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  override func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  override func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(16 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(Button_typeID))
-    data.append([0], count: 3 * 4)
-
-    if let tag = self.tag {
-      data.write(size: 4, ofField: 0, offset: offset)
-      data.append(int: tag)
-    } else {
-      data.write(size: -1, ofField: 0, offset: offset)
-    }
-
-    data.write(size: text.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
-    data.append(string: text)
-
-    data.write(size: 4, ofField: 2, offset: offset)
-    data.append(int: onClick)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

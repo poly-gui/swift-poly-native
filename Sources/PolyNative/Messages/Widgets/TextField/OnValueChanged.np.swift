@@ -8,6 +8,8 @@ let OnValueChanged_typeID: TypeID = 1_768_749_598
 class OnValueChanged: NanoPackMessage {
   var typeID: TypeID { return 1_768_749_598 }
 
+  var headerSize: Int { return 8 }
+
   let newValue: String
 
   init(newValue: String) {
@@ -40,11 +42,10 @@ class OnValueChanged: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(8)
+    data.reserveCapacity(offset + 8)
 
     data.append(typeID: TypeID(OnValueChanged_typeID))
     data.append([0], count: 1 * 4)
@@ -52,24 +53,12 @@ class OnValueChanged: NanoPackMessage {
     data.write(size: newValue.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)
     data.append(string: newValue)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(8 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(OnValueChanged_typeID))
-    data.append([0], count: 1 * 4)
-
-    data.write(size: newValue.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)
-    data.append(string: newValue)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

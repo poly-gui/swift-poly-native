@@ -8,6 +8,8 @@ let ListViewOperation_typeID: TypeID = 3_516_816_492
 class ListViewOperation: NanoPackMessage {
   var typeID: TypeID { return 3_516_816_492 }
 
+  var headerSize: Int { return 8 }
+
   let tag: Int32
 
   static func from(data: Data) -> ListViewOperation? {
@@ -52,11 +54,10 @@ class ListViewOperation: NanoPackMessage {
     bytesRead = ptr - data.startIndex
   }
 
-  func data() -> Data? {
-    let offset = 0
+  func write(to data: inout Data, offset: Int) -> Int {
+    let dataCountBefore = data.count
 
-    var data = Data()
-    data.reserveCapacity(8)
+    data.reserveCapacity(offset + 8)
 
     data.append(typeID: TypeID(ListViewOperation_typeID))
     data.append([0], count: 1 * 4)
@@ -64,24 +65,12 @@ class ListViewOperation: NanoPackMessage {
     data.write(size: 4, ofField: 0, offset: offset)
     data.append(int: tag)
 
-    return data
+    return data.count - dataCountBefore
   }
 
-  func dataWithLengthPrefix() -> Data? {
-    let offset = 4
-
+  func data() -> Data? {
     var data = Data()
-    data.reserveCapacity(8 + 4)
-
-    data.append(int: Int32(0))
-    data.append(typeID: TypeID(ListViewOperation_typeID))
-    data.append([0], count: 1 * 4)
-
-    data.write(size: 4, ofField: 0, offset: offset)
-    data.append(int: tag)
-
-    data.write(size: data.count, at: 0)
-
+    _ = write(to: &data, offset: 0)
     return data
   }
 }

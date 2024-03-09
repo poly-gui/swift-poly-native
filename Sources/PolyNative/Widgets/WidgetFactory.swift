@@ -37,7 +37,7 @@ func makeWidget(with message: Widget, context: ApplicationContext) -> NSView? {
 
     case Button_typeID:
         view = makeButton(with: message as! Button, context: context)
-        
+
     case ListView_typeID:
         view = makeListView(with: message as! ListView, context: context)
 
@@ -78,7 +78,7 @@ func makeWidget<Parent: NSView>(with message: Widget, parent: Parent, context: A
 
     case Button_typeID:
         view = makeButton(with: message as! Button, parent: parent, context: context, commit: commit)
-        
+
     case ListView_typeID:
         view = makeListView(with: message as! ListView, parent: parent, context: context, commit: commit)
 
