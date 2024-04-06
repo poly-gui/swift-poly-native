@@ -21,7 +21,9 @@ class PortableLayer {
         self.messageHandler = messageHandler
     }
 
-    fileprivate func start() throws {}
+    func start() throws {}
+
+    func kill() throws {}
 
     func invoke(_ callback: CallbackHandle, args: NanoPackMessage) {
         guard let channel = channel,
@@ -112,6 +114,7 @@ class PortableLayerInChildProcess: PortableLayer {
 
         let portableLayerProcess = Process()
         portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
+        process = portableLayerProcess
 
         let channel = StandardIOChannel(process: portableLayerProcess)
         Task {
@@ -123,5 +126,9 @@ class PortableLayerInChildProcess: PortableLayer {
         self.channel = channel
 
         try portableLayerProcess.run()
+    }
+
+    override func kill() throws {
+        process?.terminate()
     }
 }

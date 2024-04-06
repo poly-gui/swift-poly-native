@@ -8,17 +8,19 @@ let Text_typeID: TypeID = 3_495_336_243
 class Text: Widget {
   override var typeID: TypeID { return 3_495_336_243 }
 
-  override var headerSize: Int { return 12 }
+  override var headerSize: Int { return 16 }
 
   let content: String
+  let style: FontStyle
 
-  init(tag: Int32?, content: String) {
+  init(tag: Int32?, content: String, style: FontStyle) {
     self.content = content
+    self.style = style
     super.init(tag: tag)
   }
 
   required init?(data: Data) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 16
 
     var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
@@ -34,12 +36,19 @@ class Text: Widget {
     }
     ptr += contentSize
 
+    let styleByteSize = data.readSize(ofField: 2)
+    guard let style = FontStyle(data: data[ptr...]) else {
+      return nil
+    }
+    ptr += styleByteSize
+
     self.content = content
+    self.style = style
     super.init(tag: tag)
   }
 
   required init?(data: Data, bytesRead: inout Int) {
-    var ptr = data.startIndex + 12
+    var ptr = data.startIndex + 16
 
     var tag: Int32?
     if data.readSize(ofField: 0) < 0 {
@@ -55,7 +64,14 @@ class Text: Widget {
     }
     ptr += contentSize
 
+    let styleByteSize = data.readSize(ofField: 2)
+    guard let style = FontStyle(data: data[ptr...]) else {
+      return nil
+    }
+    ptr += styleByteSize
+
     self.content = content
+    self.style = style
     super.init(tag: tag)
 
     bytesRead = ptr - data.startIndex
@@ -64,10 +80,10 @@ class Text: Widget {
   override func write(to data: inout Data, offset: Int) -> Int {
     let dataCountBefore = data.count
 
-    data.reserveCapacity(offset + 12)
+    data.reserveCapacity(offset + 16)
 
     data.append(typeID: TypeID(Text_typeID))
-    data.append([0], count: 2 * 4)
+    data.append([0], count: 3 * 4)
 
     if let tag = self.tag {
       data.write(size: 4, ofField: 0, offset: offset)
@@ -78,6 +94,9 @@ class Text: Widget {
 
     data.write(size: content.lengthOfBytes(using: .utf8), ofField: 1, offset: offset)
     data.append(string: content)
+
+    let styleByteSize = style.write(to: &data, offset: data.count)
+    data.write(size: styleByteSize, ofField: 2, offset: offset)
 
     return data.count - dataCountBefore
   }

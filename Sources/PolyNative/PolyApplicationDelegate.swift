@@ -28,6 +28,16 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    public func stop() {
+        do {
+            try applicationContext?.portableLayer.kill()
+        } catch {}
+    }
+    
+    public func applicationWillTerminate(_ notification: Notification) {
+        stop()
+    }
+    
     private func handleMessage(_ message: NanoPackMessage) async {
         switch message.typeID {
         case CreateWindow_typeID:

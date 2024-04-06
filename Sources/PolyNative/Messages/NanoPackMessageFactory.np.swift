@@ -27,6 +27,7 @@ func makeNanoPackMessage(from data: Data) -> NanoPackMessage? {
     case 3516816492: return ListViewOperation(data: data)
     case 3533765426: return CreateWindow(data: data)
     case 3604546751: return ListViewBatchOperations(data: data)
+    case 3635009167: return FontStyle(data: data)
     case 4128951807: return ListViewItemConfig(data: data)
     default: return nil
     }

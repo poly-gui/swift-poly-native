@@ -65,7 +65,7 @@ class ListViewDataSource: NSObject, NSCollectionViewDataSource {
             maybeMsg = UpdateWidgets(data: resultData)
             group.leave()
         }
-        _ = group.wait(timeout: DispatchTime.now() + DispatchTimeInterval.milliseconds(50))
+        group.wait()
         
         guard let updateMsg = maybeMsg else {
             return false
