@@ -56,7 +56,7 @@ func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: Applica
     }
     
     commit(stackView, parent)
-    
+
     stackView.translatesAutoresizingMaskIntoConstraints = false
     
     if message.width != minContent {

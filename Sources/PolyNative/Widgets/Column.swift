@@ -40,9 +40,9 @@ func makeColumn(with message: Column, context: ApplicationContext) -> NSStackVie
     }
 
     for child in message.children {
-        guard makeWidget(with: child, parent: stackView, context: context, commit: { child, parent in
+        guard let view = makeWidget(with: child, parent: stackView, context: context, commit: { child, parent in
             parent.addView(child, in: gravity)
-        }) != nil else {
+        }) else {
             return nil
         }
     }
