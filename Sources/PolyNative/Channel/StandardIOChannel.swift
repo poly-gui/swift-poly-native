@@ -11,6 +11,7 @@ import NanoPack
 class StandardIOChannel: Channel {
     private let stdin: Pipe
     private let stdout: Pipe
+    private var isClosed = false
 
     var messages: AsyncStream<Data> {
         AsyncStream { continuation in
@@ -29,8 +30,12 @@ class StandardIOChannel: Channel {
     var packets: AsyncStream<ChannelPacket> {
         AsyncStream { continuation in
             Task {
-                while true {
-                    let delimiter = stdout.fileHandleForReading.readData(ofLength: 8)
+                while !isClosed {
+                    let delimiter = self.stdout.fileHandleForReading.readData(ofLength: 8)
+                    if delimiter.count < 4 {
+                        continue
+                    }
+
                     let requestID = delimiter[0..<4].withUnsafeBytes {
                         $0.load(as: UInt32.self)
                     }
@@ -75,5 +80,9 @@ class StandardIOChannel: Channel {
             data.append(int: UInt32(0))
             stdin.fileHandleForWriting.write(data)
         }
+    }
+
+    func close() {
+        isClosed = true
     }
 }

@@ -9,6 +9,9 @@ import Foundation
 import NanoPack
 
 typealias MessageHandler = (_ message: NanoPackMessage) async -> Void
+#if DEBUG
+typealias BinaryChangeHandler = (_ event: DispatchSource.FileSystemEvent) -> Void
+#endif
 
 class PortableLayer {
     private var pendingRequests = [UInt32: CheckedContinuation<Void, Never>]()
@@ -103,15 +106,13 @@ class PortableLayer {
 class PortableLayerInChildProcess: PortableLayer {
     private var process: Process?
 
+    private let portableBinaryPath = Bundle.main.path(forResource: "bundle", ofType: nil)!
+
     override init(messageHandler: @escaping MessageHandler) {
         super.init(messageHandler: messageHandler)
     }
 
     override func start() throws {
-        guard let portableBinaryPath = Bundle.main.path(forResource: "bundle", ofType: nil) else {
-            return
-        }
-
         let portableLayerProcess = Process()
         portableLayerProcess.executableURL = NSURL.fileURL(withPath: portableBinaryPath)
         process = portableLayerProcess
@@ -129,6 +130,9 @@ class PortableLayerInChildProcess: PortableLayer {
     }
 
     override func kill() throws {
+        channel?.close()
         process?.terminate()
+        channel = nil
+        process = nil
     }
 }

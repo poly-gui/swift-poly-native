@@ -14,4 +14,6 @@ protocol Channel {
     var packets: AsyncStream<ChannelPacket> { get }
 
     func send(packet: ChannelPacket)
+
+    func close()
 }

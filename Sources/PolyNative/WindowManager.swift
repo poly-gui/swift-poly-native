@@ -18,11 +18,18 @@ struct WindowManager {
     func findWindow(withTag: String) -> NSWindow? {
         return windows[withTag]
     }
-    
+
     mutating func closeWindow(withTag: String) {
         guard let window = windows.removeValue(forKey: withTag) else {
             return
         }
         window.close()
+    }
+
+    mutating func closeAllWindows() {
+        windows.forEach { _, window in
+            window.close()
+        }
+        windows = [:]
     }
 }

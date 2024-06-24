@@ -15,7 +15,7 @@ let package = Package(
             targets: ["PolyNative"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/poly-gui/swift-nanopack", branch: "main"),
+        .package(url: "https://github.com/poly-gui/swift-nanopack", branch: "main")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -23,7 +23,7 @@ let package = Package(
         .target(
             name: "PolyNative",
             dependencies: [
-                .product(name: "NanoPack", package: "swift-nanopack"),
+                .product(name: "NanoPack", package: "swift-nanopack")
             ]),
         .testTarget(
             name: "PolyNativeTests",

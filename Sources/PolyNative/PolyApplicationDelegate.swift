@@ -11,21 +11,14 @@ import NanoPack
 
 open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private var windowManager = WindowManager()
-    
     private var applicationContext: ApplicationContext?
     
+    #if DEBUG
+    private var devServerSocket: URLSessionWebSocketTask?
+    #endif
+    
     open func applicationDidFinishLaunching(_ notification: Notification) {
-        let portableLayer = PortableLayerInChildProcess(messageHandler: handleMessage(_:))
-        
-        applicationContext = ApplicationContext(
-            portableLayer: portableLayer
-        )
-        
-        do {
-            try portableLayer.start()
-        } catch let err {
-            print("Unable to start portable layer process: \(String(describing: err))")
-        }
+        initializeApplicationContext()
     }
     
     public func stop() {
@@ -36,6 +29,23 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     
     public func applicationWillTerminate(_ notification: Notification) {
         stop()
+    }
+    
+    private func initializeApplicationContext() { let portableLayer = PortableLayerInChildProcess(messageHandler: handleMessage(_:))
+        applicationContext = ApplicationContext(
+            portableLayer: portableLayer
+        )
+
+        do {
+            try portableLayer.start()
+            #if DEBUG
+            if devServerSocket == nil {
+                connectToDevServer()
+            }
+            #endif
+        } catch let err {
+            print("Unable to start portable layer process: \(String(describing: err))")
+        }
     }
     
     private func handleMessage(_ message: NanoPackMessage) async {
@@ -71,9 +81,10 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
             defer: false
         )
         window.title = message.title
+        window.isReleasedWhenClosed = false
         window.center()
         window.makeKeyAndOrderFront(nil)
-        
+
         windowManager.add(window: window, withTag: message.tag)
     }
     
@@ -96,4 +107,49 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         }
         updateWidget(old: view, new: message.widget, context: context, args: message.args)
     }
+    
+    #if DEBUG
+    private func connectToDevServer() {
+        let task = URLSession.shared.webSocketTask(with: URL(string: "ws://localhost:8759/ws")!)
+        task.resume()
+        task.receive { result in
+            guard case .success(let msg) = result else {
+                return
+            }
+            self.onWebSocketMessage(msg)
+        }
+        
+        devServerSocket = task
+        
+        print("connected to dev server at localhost:8759!")
+    }
+    
+    private func onWebSocketMessage(_ message: URLSessionWebSocketTask.Message) {
+        guard case .string(let string) = message else {
+            return
+        }
+        
+        switch string {
+        case "hotRestart":
+            hotRestart()
+            
+        default:
+            break
+        }
+    }
+    
+    private func hotRestart() {
+        print("binary updated. hot restarting...")
+        Task {
+            await MainActor.run { windowManager.closeAllWindows() }
+        }
+        do {
+            try applicationContext?.portableLayer.kill()
+            applicationContext = nil
+        } catch let err {
+            print("[WARNING] failed to gracefully terminate portable layer process. \(err)")
+        }
+        initializeApplicationContext()
+    }
+    #endif
 }
