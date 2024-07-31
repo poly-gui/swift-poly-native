@@ -8,6 +8,27 @@
 import AppKit
 import Foundation
 
+class PolyColumn: NSStackView {
+    convenience init(_ message: Column) {
+        self.init()
+
+        orientation = .vertical
+
+        switch message.horizontalAlignment {
+        case .center:
+            alignment = .centerX
+        case .bottom:
+            alignment = .bottom
+        case .start:
+            alignment = .leading
+        case .end:
+            alignment = .trailing
+        default:
+            break
+        }
+    }
+}
+
 @MainActor
 func makeColumn(with message: Column, context: ApplicationContext) -> NSStackView? {
     let stackView = NSStackView()

@@ -8,6 +8,20 @@
 import AppKit
 import Foundation
 
+class PolyTextFieldCell: NSTextFieldCell, Paddable {
+    var padding: Double = 0
+    var paddingTop: Double = 0
+    var paddingLeft: Double = 0
+    var paddingBottom: Double = 0
+    var paddingRight: Double = 0
+    var paddingX: Double = 0
+    var paddingY: Double = 0
+
+    override func drawingRect(forBounds rect: NSRect) -> NSRect {
+        return NSMakeRect(rect.origin.x + paddingX, rect.origin.y + paddingY, rect.width + paddingX * 2, rect.height + paddingY * 2)
+    }
+}
+
 class PolyTextField: NSTextField, NSTextFieldDelegate {
     private var context: ApplicationContext?
 

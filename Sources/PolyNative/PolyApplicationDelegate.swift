@@ -8,6 +8,7 @@
 import Cocoa
 import Foundation
 import NanoPack
+import twx
 
 open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private var windowManager = WindowManager()
@@ -31,7 +32,8 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         stop()
     }
     
-    private func initializeApplicationContext() { let portableLayer = PortableLayerInChildProcess(messageHandler: handleMessage(_:))
+    private func initializeApplicationContext() {
+        let portableLayer = PortableLayerInChildProcess(messageHandler: handleMessage(_:))
         applicationContext = ApplicationContext(
             portableLayer: portableLayer
         )
@@ -80,12 +82,14 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        let delegate = PolyWindowDelegate()
         window.title = message.title
+        window.delegate = delegate
         window.isReleasedWhenClosed = false
         window.center()
         window.makeKeyAndOrderFront(nil)
 
-        windowManager.add(window: window, withTag: message.tag)
+        windowManager.add(window: window, withTag: message.tag, delegate: delegate)
     }
     
     @MainActor

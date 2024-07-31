@@ -10,8 +10,10 @@ import Foundation
 
 struct WindowManager {
     private var windows: [String: NSWindow] = [:]
+    private var windowDelegates: [String: PolyWindowDelegate] = [:]
 
-    mutating func add(window: NSWindow, withTag: String) {
+    mutating func add(window: NSWindow, withTag: String, delegate: PolyWindowDelegate) {
+        windowDelegates[withTag] = delegate
         windows[withTag] = window
     }
 
