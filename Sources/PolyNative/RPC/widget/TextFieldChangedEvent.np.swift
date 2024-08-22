@@ -3,10 +3,10 @@
 import Foundation
 import NanoPack
 
-let OnValueChanged_typeID: TypeID = 1_768_749_598
+let TextFieldChangedEvent_typeID: TypeID = 2_286_117_075
 
-class OnValueChanged: NanoPackMessage {
-  var typeID: TypeID { return 1_768_749_598 }
+class TextFieldChangedEvent: NanoPackMessage {
+  var typeID: TypeID { return 2_286_117_075 }
 
   var headerSize: Int { return 8 }
 
@@ -47,7 +47,7 @@ class OnValueChanged: NanoPackMessage {
 
     data.reserveCapacity(offset + 8)
 
-    data.append(typeID: TypeID(OnValueChanged_typeID))
+    data.append(typeID: TypeID(TextFieldChangedEvent_typeID))
     data.append([0], count: 1 * 4)
 
     data.write(size: newValue.lengthOfBytes(using: .utf8), ofField: 0, offset: offset)

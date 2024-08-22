@@ -12,9 +12,9 @@ class TextField: Widget {
 
   let placeholder: String?
   let value: String
-  let onValueChanged: Int32
+  let onValueChanged: UInt32
 
-  init(tag: Int32?, placeholder: String?, value: String, onValueChanged: Int32) {
+  init(tag: UInt32?, placeholder: String?, value: String, onValueChanged: UInt32) {
     self.placeholder = placeholder
     self.value = value
     self.onValueChanged = onValueChanged
@@ -24,7 +24,7 @@ class TextField: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 20
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -50,7 +50,7 @@ class TextField: Widget {
     }
     ptr += valueSize
 
-    let onValueChanged: Int32 = data.read(at: ptr)
+    let onValueChanged: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.placeholder = placeholder
@@ -62,7 +62,7 @@ class TextField: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 20
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -88,7 +88,7 @@ class TextField: Widget {
     }
     ptr += valueSize
 
-    let onValueChanged: Int32 = data.read(at: ptr)
+    let onValueChanged: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.placeholder = placeholder

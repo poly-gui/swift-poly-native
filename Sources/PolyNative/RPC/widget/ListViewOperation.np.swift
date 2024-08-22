@@ -10,7 +10,7 @@ class ListViewOperation: NanoPackMessage {
 
   var headerSize: Int { return 8 }
 
-  let tag: Int32
+  let tag: UInt32
 
   static func from(data: Data) -> ListViewOperation? {
     switch data.readTypeID() {
@@ -30,14 +30,14 @@ class ListViewOperation: NanoPackMessage {
     }
   }
 
-  init(tag: Int32) {
+  init(tag: UInt32) {
     self.tag = tag
   }
 
   required init?(data: Data) {
     var ptr = data.startIndex + 8
 
-    let tag: Int32 = data.read(at: ptr)
+    let tag: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.tag = tag
@@ -46,7 +46,7 @@ class ListViewOperation: NanoPackMessage {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 8
 
-    let tag: Int32 = data.read(at: ptr)
+    let tag: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.tag = tag

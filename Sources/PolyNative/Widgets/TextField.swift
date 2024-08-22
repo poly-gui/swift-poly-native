@@ -68,18 +68,18 @@ class PolyTextField: NSTextField, NSTextFieldDelegate {
 }
 
 class ValueChangedCallback: Callback {
-    let handle: Int32
+    let handle: CallbackHandle
 
     private let context: ApplicationContext
 
-    init(handle: Int32, context: ApplicationContext) {
+    init(handle: CallbackHandle, context: ApplicationContext) {
         self.handle = handle
         self.context = context
     }
 
     func call(newValue: String) {
-        let onValueChanged = OnValueChanged(newValue: newValue)
-        context.portableLayer.invoke(handle, args: onValueChanged)
+        let onValueChanged = TextFieldChangedEvent(newValue: newValue)
+        context.portableLayer.invokeCallback(handle, onValueChanged) { _ in }
     }
 }
 

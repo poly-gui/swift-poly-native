@@ -8,5 +8,5 @@
 import Foundation
 
 protocol Callback {
-    var handle: Int32 { get }
+    var handle: CallbackHandle { get }
 }

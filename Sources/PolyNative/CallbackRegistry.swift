@@ -7,10 +7,10 @@
 
 import Foundation
 
-typealias CallbackHandle = Int32
+typealias CallbackHandle = UInt32
 
 class CallbackRegistry {
-    private var callbacks: [Int32: Callback] = [:]
+    private var callbacks: [CallbackHandle: Callback] = [:]
 
     func register(_ callback: Callback) {
         callbacks[callback.handle] = callback
@@ -20,11 +20,11 @@ class CallbackRegistry {
         callbacks.removeValue(forKey: handle)
     }
 
-    func isHandleRegistered(_ handle: Int32) -> Bool {
+    func isHandleRegistered(_ handle: CallbackHandle) -> Bool {
         return callbacks[handle] != nil
     }
 
-    func callbackWithHandle(_ handle: Int32) -> Callback? {
+    func callbackWithHandle(_ handle: CallbackHandle) -> Callback? {
         return callbacks[handle]
     }
 }

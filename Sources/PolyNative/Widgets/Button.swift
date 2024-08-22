@@ -28,11 +28,11 @@ class PolyButton: NSButton {
 }
 
 class OnClickCallback: Callback {
-    let handle: Int32
+    let handle: CallbackHandle
 
     private let context: ApplicationContext
 
-    init(handle: Int32, context: ApplicationContext) {
+    init(handle: CallbackHandle, context: ApplicationContext) {
         self.context = context
         self.handle = handle
     }
@@ -42,8 +42,8 @@ class OnClickCallback: Callback {
         guard let event = NSApp.currentEvent else {
             return
         }
-        let clickEvent = ClickEvent(timestamp: Int32(event.timestamp))
-        self.context.portableLayer.invoke(self.handle, args: clickEvent)
+        let clickEvent = ClickEvent(timestamp: UInt32(event.timestamp))
+        self.context.portableLayer.invokeCallback(self.handle, clickEvent) { _ in }
     }
 }
 

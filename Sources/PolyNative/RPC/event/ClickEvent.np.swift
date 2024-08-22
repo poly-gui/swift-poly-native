@@ -10,16 +10,16 @@ class ClickEvent: NanoPackMessage {
 
   var headerSize: Int { return 8 }
 
-  let timestamp: Int32
+  let timestamp: UInt32
 
-  init(timestamp: Int32) {
+  init(timestamp: UInt32) {
     self.timestamp = timestamp
   }
 
   required init?(data: Data) {
     var ptr = data.startIndex + 8
 
-    let timestamp: Int32 = data.read(at: ptr)
+    let timestamp: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.timestamp = timestamp
@@ -28,7 +28,7 @@ class ClickEvent: NanoPackMessage {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 8
 
-    let timestamp: Int32 = data.read(at: ptr)
+    let timestamp: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.timestamp = timestamp

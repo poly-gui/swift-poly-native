@@ -1,16 +1,9 @@
-//
-//  PolyApplicationDelegate.swift
-//  poly_native
-//
-//  Created by Kenneth Ng on 31/12/2023.
-//
-
 import Cocoa
 import Foundation
 import NanoPack
 import twx
 
-open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
+open class PolyApplicationDelegate: NSObject, NSApplicationDelegate, NativeLayerServiceDelegate {
     private var windowManager = WindowManager()
     private var applicationContext: ApplicationContext?
     
@@ -18,98 +11,106 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
     private var devServerSocket: URLSessionWebSocketTask?
     #endif
     
+    private var portableLayerProcess: Process?
+    private var rpcChannel: StandardIOChannel?
+    private var rpcServer: NativeLayerServiceServer?
+    
     open func applicationDidFinishLaunching(_ notification: Notification) {
         initializeApplicationContext()
     }
     
     public func stop() {
-        do {
-            try applicationContext?.portableLayer.kill()
-        } catch {}
+        rpcChannel?.close()
+        portableLayerProcess?.terminate()
     }
     
     public func applicationWillTerminate(_ notification: Notification) {
         stop()
     }
     
+    func createWidget(_ widget: Widget, _ windowTag: String) {
+        DispatchQueue.main.async {
+            guard let rootView = self.windowManager.findWindow(withTag: windowTag)?.contentView,
+                  let context = self.applicationContext
+            else {
+                return
+            }
+            _ = makeWidget(with: widget, parent: rootView, context: context)
+        }
+    }
+    
+    func updateWidget(_ tag: UInt32, _ widget: Widget, _ args: NanoPackMessage?) {
+        DispatchQueue.main.async {
+            guard let context = self.applicationContext,
+                  let view = context.viewRegistry.viewWithTag(tag)
+            else {
+                return
+            }
+            PolyNative.updateWidget(old: view, new: widget, context: context, args: args)
+        }
+    }
+    
+    func updateWidgets(_ tag: [UInt32], _ widgets: [Widget], _ args: (any NanoPack.NanoPackMessage)?) {
+        DispatchQueue.main.async {
+            guard let context = self.applicationContext else {
+                return
+            }
+            for i in 0 ..< tag.count {
+                guard let view = context.viewRegistry.viewWithTag(tag[i]) else {
+                    continue
+                }
+                PolyNative.updateWidget(old: view, new: widgets[i], context: context, args: args)
+            }
+        }
+    }
+
+    func createWindow(_ title: String, _ description: String, _ width: Int32, _ height: Int32, _ tag: String) {
+        DispatchQueue.main.async {
+            let window = NSWindow(
+                contentRect: NSMakeRect(0, 0, CGFloat(integerLiteral: Int(width)), CGFloat(integerLiteral: Int(height))),
+                styleMask: [.titled, .resizable, .miniaturizable, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            let delegate = PolyWindowDelegate()
+            window.title = title
+            window.delegate = delegate
+            window.isReleasedWhenClosed = false
+            window.center()
+            window.makeKeyAndOrderFront(nil)
+            self.windowManager.add(window: window, withTag: tag, delegate: delegate)
+        }
+    }
+        
     private func initializeApplicationContext() {
-        let portableLayer = PortableLayerInChildProcess(messageHandler: handleMessage(_:))
+        let portableLayerProcess = Process()
+        portableLayerProcess.executableURL = NSURL.fileURL(withPath: Bundle.main.path(forResource: "bundle", ofType: nil)!)
+        
+        let stdin = Pipe()
+        let stdout = Pipe()
+        portableLayerProcess.standardInput = stdin
+        portableLayerProcess.standardOutput = stdout
+        
+        let channel = NPStandardIOChannel(stdin: stdin, stdout: stdout)
+        let portableLayer = PortableLayerServiceClient(channel: channel)
+        rpcServer = NativeLayerServiceServer(channel: channel, delegate: self)
         applicationContext = ApplicationContext(
             portableLayer: portableLayer
         )
-
+        
         do {
-            try portableLayer.start()
+            try portableLayerProcess.run()
+            channel.open()
+            
             #if DEBUG
             if devServerSocket == nil {
                 connectToDevServer()
             }
             #endif
         } catch let err {
+            channel.close()
             print("Unable to start portable layer process: \(String(describing: err))")
         }
-    }
-    
-    private func handleMessage(_ message: NanoPackMessage) async {
-        switch message.typeID {
-        case CreateWindow_typeID:
-            await MainActor.run { self.createWindow(message: message as! CreateWindow) }
-            
-        case CreateWidget_typeID:
-            await MainActor.run { self.createView(message: message as! CreateWidget) }
-            
-        case UpdateWidget_typeID:
-            await MainActor.run { self.updateView(message: message as! UpdateWidget) }
-            
-        case UpdateWidgets_typeID:
-            let msg = message as! UpdateWidgets
-            await MainActor.run {
-                for update in msg.updates {
-                    self.updateView(message: update)
-                }
-            }
-
-        default:
-            NSLog("tf is message \(message.typeID)")
-        }
-    }
-    
-    @MainActor
-    private func createWindow(message: CreateWindow) {
-        let window = NSWindow(
-            contentRect: NSMakeRect(0, 0, CGFloat(integerLiteral: Int(message.width)), CGFloat(integerLiteral: Int(message.height))),
-            styleMask: [.titled, .resizable, .miniaturizable, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        let delegate = PolyWindowDelegate()
-        window.title = message.title
-        window.delegate = delegate
-        window.isReleasedWhenClosed = false
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-
-        windowManager.add(window: window, withTag: message.tag, delegate: delegate)
-    }
-    
-    @MainActor
-    private func createView(message: CreateWidget) {
-        guard let rootView = windowManager.findWindow(withTag: message.windowTag)?.contentView,
-              let context = applicationContext
-        else {
-            return
-        }
-        _ = makeWidget(with: message.widget, parent: rootView, context: context)
-    }
-    
-    @MainActor
-    private func updateView(message: UpdateWidget) {
-        guard let context = applicationContext,
-              let view = context.viewRegistry.viewWithTag(message.tag)
-        else {
-            return
-        }
-        updateWidget(old: view, new: message.widget, context: context, args: message.args)
     }
     
     #if DEBUG
@@ -147,12 +148,9 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate {
         Task {
             await MainActor.run { windowManager.closeAllWindows() }
         }
-        do {
-            try applicationContext?.portableLayer.kill()
-            applicationContext = nil
-        } catch let err {
-            print("[WARNING] failed to gracefully terminate portable layer process. \(err)")
-        }
+        rpcChannel?.close()
+        portableLayerProcess?.terminate()
+        applicationContext = nil
         initializeApplicationContext()
     }
     #endif

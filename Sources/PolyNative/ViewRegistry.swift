@@ -8,7 +8,7 @@
 import AppKit
 import Foundation
 
-typealias ViewTag = Int32
+typealias ViewTag = UInt32
 
 class ViewRegistry {
     private var views: [ViewTag: NSView] = [:]

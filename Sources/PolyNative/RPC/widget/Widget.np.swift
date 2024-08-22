@@ -10,7 +10,7 @@ class Widget: NanoPackMessage {
 
   var headerSize: Int { return 8 }
 
-  let tag: Int32?
+  let tag: UInt32?
 
   static func from(data: Data) -> Widget? {
     switch data.readTypeID() {
@@ -40,14 +40,14 @@ class Widget: NanoPackMessage {
     }
   }
 
-  init(tag: Int32?) {
+  init(tag: UInt32?) {
     self.tag = tag
   }
 
   required init?(data: Data) {
     var ptr = data.startIndex + 8
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -61,7 +61,7 @@ class Widget: NanoPackMessage {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 8
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {

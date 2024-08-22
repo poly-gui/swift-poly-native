@@ -12,7 +12,7 @@ class Center: Widget {
 
   let child: Widget
 
-  init(tag: Int32?, child: Widget) {
+  init(tag: UInt32?, child: Widget) {
     self.child = child
     super.init(tag: tag)
   }
@@ -20,7 +20,7 @@ class Center: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 12
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -41,7 +41,7 @@ class Center: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 12
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {

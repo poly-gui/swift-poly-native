@@ -17,7 +17,7 @@ class Row: Widget {
   let children: [Widget]
 
   init(
-    tag: Int32?, width: Double, height: Double, horizontalAlignment: Alignment,
+    tag: UInt32?, width: Double, height: Double, horizontalAlignment: Alignment,
     verticalAlignment: Alignment, children: [Widget]
   ) {
     self.width = width
@@ -31,7 +31,7 @@ class Row: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 28
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -81,7 +81,7 @@ class Row: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 28
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {

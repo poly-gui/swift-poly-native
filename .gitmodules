@@ -1,3 +1,6 @@
 [submodule "Sources/twx"]
 	path = Sources/twx
 	url = https://github.com/poly-gui/twx.git
+[submodule "Sources/rpc-schemas"]
+	path = Sources/rpc-schemas
+	url = https://github.com/poly-gui/rpc-schemas.git

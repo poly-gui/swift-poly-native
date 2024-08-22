@@ -24,11 +24,11 @@ class PolyStaticText: NSTextField, Paddable {
     convenience init(_ message: Text) {
         self.init(labelWithString: message.content)
 
-        wantsLayer = true
-        styleDict = parseToStyleDict(string: message.tw)
-        if let styleDict = styleDict {
-            apply(styleDict, to: self)
-        }
+//        wantsLayer = true
+//        styleDict = parseToStyleDict(string: message.tw)
+//        if let styleDict = styleDict {
+//            apply(styleDict, to: self)
+//        }
 
         let font: NSFont? = if message.style.fontFamily == "" {
             .systemFont(
@@ -50,6 +50,7 @@ class PolyStaticText: NSTextField, Paddable {
         cell.paddingRight = paddingRight
         cell.paddingX = paddingX
         cell.paddingY = paddingY
+        cell.stringValue = message.content
         self.cell = cell
     }
 
@@ -74,7 +75,7 @@ class PolyStaticText: NSTextField, Paddable {
     }
 
     func update(message: Text) {
-        styleDict = parseToStyleDict(string: message.tw)
+//        styleDict = parseToStyleDict(string: message.tw)
 
         let font: NSFont?
         if message.style.fontFamily == "" {

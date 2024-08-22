@@ -11,9 +11,9 @@ class Button: Widget {
   override var headerSize: Int { return 16 }
 
   let text: String
-  let onClick: Int32
+  let onClick: UInt32
 
-  init(tag: Int32?, text: String, onClick: Int32) {
+  init(tag: UInt32?, text: String, onClick: UInt32) {
     self.text = text
     self.onClick = onClick
     super.init(tag: tag)
@@ -22,7 +22,7 @@ class Button: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 16
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -36,7 +36,7 @@ class Button: Widget {
     }
     ptr += textSize
 
-    let onClick: Int32 = data.read(at: ptr)
+    let onClick: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.text = text
@@ -47,7 +47,7 @@ class Button: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 16
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -61,7 +61,7 @@ class Button: Widget {
     }
     ptr += textSize
 
-    let onClick: Int32 = data.read(at: ptr)
+    let onClick: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.text = text

@@ -10,9 +10,9 @@ import Foundation
 class ApplicationContext {
     let callbackRegistry: CallbackRegistry
     let viewRegistry: ViewRegistry
-    let portableLayer: PortableLayer
+    let portableLayer: PortableLayerServiceClient
 
-    init(portableLayer: PortableLayer) {
+    init(portableLayer: PortableLayerServiceClient) {
         self.callbackRegistry = CallbackRegistry()
         self.viewRegistry = ViewRegistry()
         self.portableLayer = portableLayer

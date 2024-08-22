@@ -12,7 +12,7 @@ class ListViewDeleteOperation: ListViewOperation {
 
   let deleteAt: [Int32]
 
-  init(tag: Int32, deleteAt: [Int32]) {
+  init(tag: UInt32, deleteAt: [Int32]) {
     self.deleteAt = deleteAt
     super.init(tag: tag)
   }
@@ -20,7 +20,7 @@ class ListViewDeleteOperation: ListViewOperation {
   required init?(data: Data) {
     var ptr = data.startIndex + 12
 
-    let tag: Int32 = data.read(at: ptr)
+    let tag: UInt32 = data.read(at: ptr)
     ptr += 4
 
     let deleteAtByteSize = data.readSize(ofField: 1)
@@ -37,7 +37,7 @@ class ListViewDeleteOperation: ListViewOperation {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 12
 
-    let tag: Int32 = data.read(at: ptr)
+    let tag: UInt32 = data.read(at: ptr)
     ptr += 4
 
     let deleteAtByteSize = data.readSize(ofField: 1)

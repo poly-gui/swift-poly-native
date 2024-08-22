@@ -14,12 +14,12 @@ class ListView: Widget {
   let height: Double
   let sections: [UInt32]
   let itemHeight: Double
-  let onCreate: Int32
-  let onBind: Int32
+  let onCreate: UInt32
+  let onBind: UInt32
 
   init(
-    tag: Int32?, width: Double, height: Double, sections: [UInt32], itemHeight: Double,
-    onCreate: Int32, onBind: Int32
+    tag: UInt32?, width: Double, height: Double, sections: [UInt32], itemHeight: Double,
+    onCreate: UInt32, onBind: UInt32
   ) {
     self.width = width
     self.height = height
@@ -33,7 +33,7 @@ class ListView: Widget {
   required init?(data: Data) {
     var ptr = data.startIndex + 32
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -57,10 +57,10 @@ class ListView: Widget {
     let itemHeight: Double = data.read(at: ptr)
     ptr += 8
 
-    let onCreate: Int32 = data.read(at: ptr)
+    let onCreate: UInt32 = data.read(at: ptr)
     ptr += 4
 
-    let onBind: Int32 = data.read(at: ptr)
+    let onBind: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.width = width
@@ -75,7 +75,7 @@ class ListView: Widget {
   required init?(data: Data, bytesRead: inout Int) {
     var ptr = data.startIndex + 32
 
-    var tag: Int32?
+    var tag: UInt32?
     if data.readSize(ofField: 0) < 0 {
       tag = nil
     } else {
@@ -99,10 +99,10 @@ class ListView: Widget {
     let itemHeight: Double = data.read(at: ptr)
     ptr += 8
 
-    let onCreate: Int32 = data.read(at: ptr)
+    let onCreate: UInt32 = data.read(at: ptr)
     ptr += 4
 
-    let onBind: Int32 = data.read(at: ptr)
+    let onBind: UInt32 = data.read(at: ptr)
     ptr += 4
 
     self.width = width

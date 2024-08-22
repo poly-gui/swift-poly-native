@@ -1,4 +1,0 @@
-UpdateWidget:
-  tag: int32
-  widget: Widget
-  args: any?

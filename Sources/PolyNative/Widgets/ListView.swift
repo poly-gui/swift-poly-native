@@ -75,9 +75,12 @@ class PolyListViewItem: NSCollectionViewItem {
     }
     
     func create(config: ListViewItemConfig) {
-        context!.portableLayer.invoke(onCreateCallbackHandle!, args: config) { resultData in
+        context!.portableLayer.invokeCallback(onCreateCallbackHandle!, config) { result in
+            guard case let .success(msg) = result else {
+                return
+            }
             DispatchQueue.main.sync {
-                guard let itemMsg = ListViewItem(data: resultData) else {
+                guard let itemMsg = msg as? ListViewItem else {
                     return
                 }
                 self.tag = itemMsg.itemTag
@@ -87,20 +90,7 @@ class PolyListViewItem: NSCollectionViewItem {
     }
     
     func rebind(config: ListViewItemConfig) {
-        context!.portableLayer.invoke(onBindCallbackHandle!, args: config) { resultData in
-            DispatchQueue.main.sync {
-                guard let updateMsg = UpdateWidgets(data: resultData) else {
-                    return
-                }
-                
-                for update in updateMsg.updates {
-                    guard let widget = self.context!.viewRegistry.viewWithTag(update.tag) else {
-                        continue
-                    }
-                    updateWidget(old: widget, new: update.widget, context: self.context!)
-                }
-            }
-        }
+        context!.portableLayer.invokeVoidCallback(onBindCallbackHandle!, config) { _ in }
     }
 }
 

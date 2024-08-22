@@ -1,9 +1,0 @@
-enum Alignment:
-  - START
-  - END
-  - TOP
-  - BOTTOM
-  - CENTER
-  - SPACE_BETWEEN
-  - SPACE_AROUND
-  - SPACE_EVENLY

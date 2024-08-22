@@ -1,6 +1,0 @@
-Row::Widget:
-  width: double
-  height: double
-  horizontalAlignment: Alignment
-  verticalAlignment: Alignment
-  children: Widget[]
