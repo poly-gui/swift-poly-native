@@ -21,6 +21,7 @@ class Widget: NanoPackMessage {
     case 1_855_640_887: return Center(data: data)
     case 2_164_488_861: return ListView(data: data)
     case 2_415_007_766: return Column(data: data)
+    case 3_373_588_321: return Slider(data: data)
     case 3_495_336_243: return Text(data: data)
     default: return nil
     }
@@ -35,6 +36,7 @@ class Widget: NanoPackMessage {
     case 1_855_640_887: return Center(data: data, bytesRead: &bytesRead)
     case 2_164_488_861: return ListView(data: data, bytesRead: &bytesRead)
     case 2_415_007_766: return Column(data: data, bytesRead: &bytesRead)
+    case 3_373_588_321: return Slider(data: data, bytesRead: &bytesRead)
     case 3_495_336_243: return Text(data: data, bytesRead: &bytesRead)
     default: return nil
     }
