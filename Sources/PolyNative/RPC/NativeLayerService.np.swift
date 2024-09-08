@@ -7,8 +7,12 @@ protocol NativeLayerServiceDelegate {
   func createWindow(
     _ title: String, _ description: String, _ width: Int32, _ height: Int32, _ tag: String)
   func createWidget(_ widget: Widget, _ windowTag: String)
+  func appendNewWidget(_ child: Widget, _ parentTag: UInt32)
   func updateWidget(_ tag: UInt32, _ widget: Widget, _ args: NanoPackMessage?)
   func updateWidgets(_ tag: [UInt32], _ widgets: [Widget], _ args: NanoPackMessage?)
+  func removeWidget(_ tag: UInt32)
+  func insertWidgetBefore(_ widget: Widget, _ beforeWidget: Widget, _ parentTag: UInt32)
+  func clearWindow(_ windowTag: String)
 }
 
 class NativeLayerServiceServer: NPRPCServer {
@@ -69,6 +73,24 @@ class NativeLayerServiceServer: NPRPCServer {
       ptr += windowTagSize
 
       self.delegate.createWidget(widget, windowTag)
+      var data = Data(capacity: 6)
+      data.append(int: NPRPCMessageType.response.rawValue)
+      data.append(int: msgID)
+      data.append(int: UInt8(0))
+
+      return data
+    }
+    on("append_new_widget") { data, offset, msgID in
+      var ptr = offset
+      var childByteSize = 0
+      guard let child = Widget.from(data: data[ptr...], bytesRead: &childByteSize) else {
+        return nil
+      }
+      ptr += childByteSize
+      let parentTag: UInt32 = data.read(at: ptr)
+      ptr += 4
+
+      self.delegate.appendNewWidget(child, parentTag)
       var data = Data(capacity: 6)
       data.append(int: NPRPCMessageType.response.rawValue)
       data.append(int: msgID)
@@ -143,6 +165,60 @@ class NativeLayerServiceServer: NPRPCServer {
       }
 
       self.delegate.updateWidgets(tag, widgets, args)
+      var data = Data(capacity: 6)
+      data.append(int: NPRPCMessageType.response.rawValue)
+      data.append(int: msgID)
+      data.append(int: UInt8(0))
+
+      return data
+    }
+    on("remove_widget") { data, offset, msgID in
+      var ptr = offset
+      let tag: UInt32 = data.read(at: ptr)
+      ptr += 4
+
+      self.delegate.removeWidget(tag)
+      var data = Data(capacity: 6)
+      data.append(int: NPRPCMessageType.response.rawValue)
+      data.append(int: msgID)
+      data.append(int: UInt8(0))
+
+      return data
+    }
+    on("insert_widget_before") { data, offset, msgID in
+      var ptr = offset
+      var widgetByteSize = 0
+      guard let widget = Widget.from(data: data[ptr...], bytesRead: &widgetByteSize) else {
+        return nil
+      }
+      ptr += widgetByteSize
+      var beforeWidgetByteSize = 0
+      guard let beforeWidget = Widget.from(data: data[ptr...], bytesRead: &beforeWidgetByteSize)
+      else {
+        return nil
+      }
+      ptr += beforeWidgetByteSize
+      let parentTag: UInt32 = data.read(at: ptr)
+      ptr += 4
+
+      self.delegate.insertWidgetBefore(widget, beforeWidget, parentTag)
+      var data = Data(capacity: 6)
+      data.append(int: NPRPCMessageType.response.rawValue)
+      data.append(int: msgID)
+      data.append(int: UInt8(0))
+
+      return data
+    }
+    on("clear_window") { data, offset, msgID in
+      var ptr = offset
+      let windowTagSize = data.readSize(at: ptr)
+      ptr += 4
+      guard let windowTag = data.read(at: ptr, withLength: windowTagSize) else {
+        return nil
+      }
+      ptr += windowTagSize
+
+      self.delegate.clearWindow(windowTag)
       var data = Data(capacity: 6)
       data.append(int: NPRPCMessageType.response.rawValue)
       data.append(int: msgID)
@@ -257,6 +333,55 @@ class NativeLayerServiceClient: NPRPCClient {
     let widgetByteSize = widget.write(to: &data, offset: data.count)
     data.append(size: windowTag.lengthOfBytes(using: .utf8))
     data.append(string: windowTag)
+
+    return await withCheckedContinuation { continuation in
+      sendRequestData(msgID, data) { data, offset in
+        var ptr = offset
+        let errFlag: UInt8 = data.read(at: ptr)
+        ptr += 1
+        guard errFlag == 0 else {
+          continuation.resume(returning: .failure(.malformedResponse))
+          return
+        }
+        continuation.resume(returning: .success(()))
+      }
+    }
+  }
+
+  func appendNewWidget(
+    _ child: Widget, _ parentTag: UInt32,
+    completionHandler: @escaping (Result<Void, NPRPCError>) -> Void
+  ) {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 17)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(17))
+    data.append(string: "append_new_widget")
+    let childByteSize = child.write(to: &data, offset: data.count)
+    data.append(int: parentTag)
+
+    sendRequestData(msgID, data) { data, offset in
+      var ptr = offset
+      let errFlag: UInt8 = data.read(at: ptr)
+      ptr += 1
+      guard errFlag == 0 else {
+        return
+      }
+      completionHandler(.success(()))
+    }
+  }
+
+  @available(macOS 10.15, iOS 13, *)
+  func appendNewWidget(_ child: Widget, _ parentTag: UInt32) async -> Result<Void, NPRPCError> {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 17)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(17))
+    data.append(string: "append_new_widget")
+    let childByteSize = child.write(to: &data, offset: data.count)
+    data.append(int: parentTag)
 
     return await withCheckedContinuation { continuation in
       sendRequestData(msgID, data) { data, offset in
@@ -399,6 +524,152 @@ class NativeLayerServiceClient: NPRPCClient {
     } else {
       data.append(int: UInt8(0))
     }
+
+    return await withCheckedContinuation { continuation in
+      sendRequestData(msgID, data) { data, offset in
+        var ptr = offset
+        let errFlag: UInt8 = data.read(at: ptr)
+        ptr += 1
+        guard errFlag == 0 else {
+          continuation.resume(returning: .failure(.malformedResponse))
+          return
+        }
+        continuation.resume(returning: .success(()))
+      }
+    }
+  }
+
+  func removeWidget(_ tag: UInt32, completionHandler: @escaping (Result<Void, NPRPCError>) -> Void)
+  {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 13 + 4)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(13))
+    data.append(string: "remove_widget")
+    data.append(int: tag)
+
+    sendRequestData(msgID, data) { data, offset in
+      var ptr = offset
+      let errFlag: UInt8 = data.read(at: ptr)
+      ptr += 1
+      guard errFlag == 0 else {
+        return
+      }
+      completionHandler(.success(()))
+    }
+  }
+
+  @available(macOS 10.15, iOS 13, *)
+  func removeWidget(_ tag: UInt32) async -> Result<Void, NPRPCError> {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 13 + 4)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(13))
+    data.append(string: "remove_widget")
+    data.append(int: tag)
+
+    return await withCheckedContinuation { continuation in
+      sendRequestData(msgID, data) { data, offset in
+        var ptr = offset
+        let errFlag: UInt8 = data.read(at: ptr)
+        ptr += 1
+        guard errFlag == 0 else {
+          continuation.resume(returning: .failure(.malformedResponse))
+          return
+        }
+        continuation.resume(returning: .success(()))
+      }
+    }
+  }
+
+  func insertWidgetBefore(
+    _ widget: Widget, _ beforeWidget: Widget, _ parentTag: UInt32,
+    completionHandler: @escaping (Result<Void, NPRPCError>) -> Void
+  ) {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 20)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(20))
+    data.append(string: "insert_widget_before")
+    let widgetByteSize = widget.write(to: &data, offset: data.count)
+    let beforeWidgetByteSize = beforeWidget.write(to: &data, offset: data.count)
+    data.append(int: parentTag)
+
+    sendRequestData(msgID, data) { data, offset in
+      var ptr = offset
+      let errFlag: UInt8 = data.read(at: ptr)
+      ptr += 1
+      guard errFlag == 0 else {
+        return
+      }
+      completionHandler(.success(()))
+    }
+  }
+
+  @available(macOS 10.15, iOS 13, *)
+  func insertWidgetBefore(_ widget: Widget, _ beforeWidget: Widget, _ parentTag: UInt32) async
+    -> Result<Void, NPRPCError>
+  {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 20)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(20))
+    data.append(string: "insert_widget_before")
+    let widgetByteSize = widget.write(to: &data, offset: data.count)
+    let beforeWidgetByteSize = beforeWidget.write(to: &data, offset: data.count)
+    data.append(int: parentTag)
+
+    return await withCheckedContinuation { continuation in
+      sendRequestData(msgID, data) { data, offset in
+        var ptr = offset
+        let errFlag: UInt8 = data.read(at: ptr)
+        ptr += 1
+        guard errFlag == 0 else {
+          continuation.resume(returning: .failure(.malformedResponse))
+          return
+        }
+        continuation.resume(returning: .success(()))
+      }
+    }
+  }
+
+  func clearWindow(
+    _ windowTag: String, completionHandler: @escaping (Result<Void, NPRPCError>) -> Void
+  ) {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 12)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(12))
+    data.append(string: "clear_window")
+    data.append(size: windowTag.lengthOfBytes(using: .utf8))
+    data.append(string: windowTag)
+
+    sendRequestData(msgID, data) { data, offset in
+      var ptr = offset
+      let errFlag: UInt8 = data.read(at: ptr)
+      ptr += 1
+      guard errFlag == 0 else {
+        return
+      }
+      completionHandler(.success(()))
+    }
+  }
+
+  @available(macOS 10.15, iOS 13, *)
+  func clearWindow(_ windowTag: String) async -> Result<Void, NPRPCError> {
+    let msgID = newMessageID()
+    var data = Data(capacity: 9 + 12)
+    data.append(int: NPRPCMessageType.request.rawValue)
+    data.append(int: msgID)
+    data.append(int: UInt32(12))
+    data.append(string: "clear_window")
+    data.append(size: windowTag.lengthOfBytes(using: .utf8))
+    data.append(string: windowTag)
 
     return await withCheckedContinuation { continuation in
       sendRequestData(msgID, data) { data, offset in

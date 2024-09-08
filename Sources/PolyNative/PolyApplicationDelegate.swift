@@ -39,6 +39,25 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate, NativeLayer
         }
     }
     
+    func appendNewWidget(_ child: Widget, _ parentTag: UInt32) {
+        DispatchQueue.main.async {
+            guard let context = self.applicationContext,
+                  let parentView = context.viewRegistry.viewWithTag(parentTag)
+            else {
+                return
+            }
+            
+            switch parentView {
+            case let parentView as PolyRow:
+                _ = makeWidget(with: child, parent: parentView, context: context, commit: PolyRow.committer(_:_:))
+            case let parentView as PolyColumn:
+                _ = makeWidget(with: child, parent: parentView, context: context, commit: PolyColumn.committer(_:_:))
+            default:
+                break
+            }
+        }
+    }
+    
     func updateWidget(_ tag: UInt32, _ widget: Widget, _ args: NanoPackMessage?) {
         DispatchQueue.main.async {
             guard let context = self.applicationContext,
@@ -63,6 +82,55 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate, NativeLayer
             }
         }
     }
+    
+    func insertWidgetBefore(_ widget: Widget, _ beforeWidget: Widget, _ parentTag: UInt32) {
+        guard let context = applicationContext,
+              let parentView = context.viewRegistry.viewWithTag(parentTag) as? MultiChildrenWidget,
+              let beforeWidgetTag = beforeWidget.tag,
+              let beforeView = context.viewRegistry.viewWithTag(beforeWidgetTag),
+              let widgetTag = widget.tag
+        else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            if let childView = context.viewRegistry.viewWithTag(widgetTag) {
+                parentView.insertView(childView, before: beforeView)
+            } else {
+                _ = makeWidget(with: widget, parent: parentView, context: context, commit: { child, parent in
+                    (parent as! MultiChildrenWidget).insertView(child, before: beforeView)
+                })
+            }
+        }
+    }
+    
+    func insertWidgetAtIndex(_ tag: UInt32, _ index: UInt32, _ parentTag: UInt32) {
+        guard let context = applicationContext,
+              let childView = context.viewRegistry.viewWithTag(tag),
+              let parentView = context.viewRegistry.viewWithTag(parentTag)
+        else {
+            return
+        }
+        
+        switch parentView {
+        case let parentView as PolyRow:
+            parentView.insertView(childView, at: Int(index))
+        case let parentView as PolyColumn:
+            parentView.insertView(childView, at: Int(index))
+            
+        default:
+            break
+        }
+    }
+    
+    func removeWidget(_ tag: UInt32) {
+        guard let context = applicationContext,
+              let view = context.viewRegistry.viewWithTag(tag)
+        else {
+            return
+        }
+        view.removeFromSuperview()
+    }
 
     func createWindow(_ title: String, _ description: String, _ width: Int32, _ height: Int32, _ tag: String) {
         DispatchQueue.main.async {
@@ -80,6 +148,13 @@ open class PolyApplicationDelegate: NSObject, NSApplicationDelegate, NativeLayer
             window.makeKeyAndOrderFront(nil)
             self.windowManager.add(window: window, withTag: tag, delegate: delegate)
         }
+    }
+    
+    func clearWindow(_ windowTag: String) {
+        guard let window = windowManager.findWindow(withTag: windowTag) else {
+            return
+        }
+        window.contentView = nil
     }
         
     private func initializeApplicationContext() {

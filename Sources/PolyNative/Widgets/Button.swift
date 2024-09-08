@@ -43,7 +43,7 @@ class OnClickCallback: Callback {
             return
         }
         let clickEvent = ClickEvent(timestamp: UInt32(event.timestamp))
-        self.context.portableLayer.invokeCallback(self.handle, clickEvent) { _ in }
+        self.context.portableLayer.invokeVoidCallback(self.handle, clickEvent) { _ in }
     }
 }
 

@@ -1,80 +1,88 @@
-//
-//  File.swift
-//
-//
-//  Created by Kenneth Ng on 22/02/2024.
-//
-
 import AppKit
 import Foundation
 
+class PolyRow: NSStackView, MultiChildrenWidget {
+    private(set) var gravity: NSStackView.Gravity = .center
+
+    static func committer(_ child: NSView, _ parent: PolyRow) {
+        parent.addView(child)
+    }
+
+    convenience init(_ message: Row) {
+        self.init()
+        orientation = .horizontal
+
+        gravity = switch message.horizontalAlignment {
+        case .start: .leading
+        case .end: .trailing
+        case .center: .center
+        default: .center
+        }
+
+        alignment = switch message.verticalAlignment {
+        case .center: .centerY
+        case .bottom: .bottom
+        case .start: .top
+        case .end: .bottom
+        default: alignment
+        }
+    }
+
+    func addView(_ view: NSView) {
+        addView(view, in: gravity)
+    }
+
+    func insertView(_ view: NSView, at index: Int) {
+        insertView(view, at: index, in: gravity)
+    }
+
+    func insertView(_ view: NSView, before anotherView: NSView) {
+        for i in 0 ..< arrangedSubviews.count {
+            if anotherView == arrangedSubviews[i] {
+                insertView(view, at: i, in: gravity)
+                return
+            }
+        }
+    }
+}
+
 @MainActor
-func makeRow(with message: Row, context: ApplicationContext) -> NSStackView? {
-    let stackView = NSStackView()
-    stackView.orientation = .horizontal
-    
-    let gravity: NSStackView.Gravity
-    switch message.horizontalAlignment {
-    case .start:
-        gravity = .leading
-    case .end:
-        gravity = .trailing
-    case .center:
-        gravity = .center
-    default:
-        gravity = .center
-    }
-    
-    switch message.verticalAlignment {
-    case .center:
-        stackView.alignment = .centerY
-    case .bottom:
-        stackView.alignment = .bottom
-    case .start:
-        stackView.alignment = .top
-    case .end:
-        stackView.alignment = .bottom
-    default:
-        break
-    }
-    
+func makeRow(with message: Row, context: ApplicationContext) -> PolyRow? {
+    let row = PolyRow(message)
     for child in message.children {
-        guard makeWidget(with: child, parent: stackView, context: context, commit: { child, parent in
-            parent.addView(child, in: gravity)
-        }) != nil else {
+        guard makeWidget(with: child, parent: row, context: context, commit: PolyRow.committer(_:_:)) != nil else {
             return nil
         }
     }
-    
-    return stackView
+    return row
 }
 
 @MainActor
 func makeRow<Parent: NSView>(with message: Row, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
-    guard let stackView = makeRow(with: message, context: context) else {
+    guard let row = makeRow(with: message, context: context) else {
         return nil
     }
-    
-    commit(stackView, parent)
 
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    
+    commit(row, parent)
+
+    row.translatesAutoresizingMaskIntoConstraints = false
+
     if message.width != minContent {
         if message.width == fillParent {
-            stackView.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true
+            row.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true
         } else {
-            stackView.widthAnchor.constraint(equalToConstant: message.width).isActive = true
+            row.widthAnchor.constraint(equalToConstant: message.width).isActive = true
         }
     }
     if message.height != minContent {
         if message.height == fillParent {
-            stackView.heightAnchor.constraint(equalTo: parent.heightAnchor).isActive = true
+            row.heightAnchor.constraint(equalTo: parent.heightAnchor).isActive = true
         } else {
-            stackView.heightAnchor.constraint(equalToConstant: message.height).isActive = true
+            row.heightAnchor.constraint(equalToConstant: message.height).isActive = true
         }
     }
-    
-    return stackView
+
+    return row
 }
 
 @MainActor

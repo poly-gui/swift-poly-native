@@ -8,11 +8,23 @@
 import AppKit
 import Foundation
 
-class PolyColumn: NSStackView {
+class PolyColumn: NSStackView, MultiChildrenWidget {
+    private(set) var gravity: NSStackView.Gravity = .center
+
+    static func committer(_ child: NSView, _ parent: PolyColumn) {
+        parent.addView(child)
+    }
+
     convenience init(_ message: Column) {
         self.init()
-
         orientation = .vertical
+
+        gravity = switch message.verticalAlignment {
+        case .start: .top
+        case .center: .center
+        case .end: .bottom
+        default: .center
+        }
 
         switch message.horizontalAlignment {
         case .center:
@@ -27,74 +39,60 @@ class PolyColumn: NSStackView {
             break
         }
     }
+
+    func addView(_ view: NSView) {
+        addView(view, in: gravity)
+    }
+
+    func insertView(_ view: NSView, at index: Int) {
+        insertView(view, at: index, in: gravity)
+    }
+
+    func insertView(_ view: NSView, before anotherView: NSView) {
+        for i in 0 ..< arrangedSubviews.count {
+            if anotherView == arrangedSubviews[i] {
+                insertView(view, at: i, in: gravity)
+                return
+            }
+        }
+    }
 }
 
 @MainActor
 func makeColumn(with message: Column, context: ApplicationContext) -> NSStackView? {
-    let stackView = NSStackView()
-
-    stackView.orientation = .vertical
-
-    switch message.horizontalAlignment {
-    case .center:
-        stackView.alignment = .centerX
-    case .bottom:
-        stackView.alignment = .bottom
-    case .start:
-        stackView.alignment = .leading
-    case .end:
-        stackView.alignment = .trailing
-    default:
-        break
-    }
-
-    let gravity: NSStackView.Gravity
-    switch message.verticalAlignment {
-    case .start:
-        gravity = .top
-    case .center:
-        gravity = .center
-    case .end:
-        gravity = .bottom
-    default:
-        gravity = .center
-    }
-
+    let column = PolyColumn(message)
     for child in message.children {
-        guard let view = makeWidget(with: child, parent: stackView, context: context, commit: { child, parent in
-            parent.addView(child, in: gravity)
-        }) else {
+        guard makeWidget(with: child, parent: column, context: context, commit: PolyColumn.committer(_:_:)) != nil else {
             return nil
         }
     }
-
-    return stackView
+    return column
 }
 
 @MainActor
 func makeColumn<Parent: NSView>(with message: Column, parent: Parent, context: ApplicationContext, commit: ViewCommiter<Parent>) -> NSStackView? {
-    guard let stackView = makeColumn(with: message, context: context) else {
+    guard let column = makeColumn(with: message, context: context) else {
         return nil
     }
 
-    commit(stackView, parent)
+    commit(column, parent)
 
-    stackView.translatesAutoresizingMaskIntoConstraints = false
+    column.translatesAutoresizingMaskIntoConstraints = false
 
     if message.width != minContent {
         if message.width == fillParent {
-            stackView.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true
+            column.widthAnchor.constraint(equalTo: parent.widthAnchor).isActive = true
         } else {
-            stackView.widthAnchor.constraint(equalToConstant: message.width).isActive = true
+            column.widthAnchor.constraint(equalToConstant: message.width).isActive = true
         }
     }
     if message.height != minContent {
         if message.height == fillParent {
-            stackView.heightAnchor.constraint(equalTo: parent.heightAnchor).isActive = true
+            column.heightAnchor.constraint(equalTo: parent.heightAnchor).isActive = true
         } else {
-            stackView.heightAnchor.constraint(equalToConstant: message.height).isActive = true
+            column.heightAnchor.constraint(equalToConstant: message.height).isActive = true
         }
     }
 
-    return stackView
+    return column
 }

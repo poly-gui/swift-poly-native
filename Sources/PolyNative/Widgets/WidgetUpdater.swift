@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Kenneth Ng on 25/01/2024.
-//
-
 import AppKit
 import NanoPack
 import Foundation
